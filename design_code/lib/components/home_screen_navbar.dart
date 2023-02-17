@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 class HomeScreenNavBar extends StatelessWidget {
   const HomeScreenNavBar({super.key, required this.triggerAnimation});
 
-  final Function() triggerAnimation;
+  final void Function() triggerAnimation;
 
   @override
   Widget build(BuildContext context) {

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 class SidebarButton extends StatelessWidget {
   SidebarButton({required this.triggerAnimation});
 
-  final Function() triggerAnimation;
+  final void Function() triggerAnimation;
 
   @override
   Widget build(BuildContext context) {
