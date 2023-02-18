@@ -39,25 +39,35 @@ class RecentCourseCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        course.courseSubtitle,
-                        style: kCardSubtitleStyle,
+                      Hero(
+                        tag: 'subtitle',
+                        child: Text(
+                          course.courseSubtitle,
+                          style: kCardSubtitleStyle,
+                        ),
                       ),
                       SizedBox(
                         height: 6.0,
                       ),
-                      Text(
-                        course.courseTitle,
-                        style: kCardTitleStyle,
+                      Hero(
+                        tag: 'title',
+                        child: Text(
+                          course.courseTitle,
+                          style: kCardTitleStyle,
+                        ),
                       ),
                     ],
                   ),
                 ),
                 Expanded(
+                  child: Hero(
+                    tag: 'illustration',
                     child: Image.asset(
-                  'asset/illustrations/${course.illustration}',
-                  fit: BoxFit.cover,
-                )),
+                      'asset/illustrations/${course.illustration}',
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -65,7 +75,10 @@ class RecentCourseCard extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(right: 42.0),
           child: Container(
-            child: Image.asset('asset/logos/${course.logo}'),
+            child: Hero(
+              tag: 'logo',
+              child: Image.asset('asset/logos/${course.logo}'),
+            ),
             width: 60.0,
             height: 60.0,
             decoration: BoxDecoration(
