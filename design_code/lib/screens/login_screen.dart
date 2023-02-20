@@ -169,16 +169,16 @@ class _LoginScreenState extends State<LoginScreen> {
                                       await _auth
                                           .createUserWithEmailAndPassword(
                                               email: email, password: password)
-                                          .then((user) => {
-                                                Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                    builder: (context) =>
-                                                        HomeScreen(),
-                                                    fullscreenDialog: false,
-                                                  ),
-                                                ),
-                                              });
+                                          .then((user) {
+                                        user.user!.sendEmailVerification();
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => HomeScreen(),
+                                            fullscreenDialog: false,
+                                          ),
+                                        );
+                                      });
                                     } catch (err) {}
                                   } else {
                                     // if there are other errors, show the dialog with error
@@ -225,11 +225,36 @@ class _LoginScreenState extends State<LoginScreen> {
                         SizedBox(
                           height: 15.0,
                         ),
-                        Container(
-                          child: Text(
-                            'Forgot Password?',
-                            style: kCalloutLabelStyle.copyWith(
-                                color: Color(0x721b1e9c)),
+                        GestureDetector(
+                          onTap: () {
+                            _auth
+                                .sendPasswordResetEmail(email: email)
+                                .then((value) => {
+                                      showDialog(
+                                        context: context,
+                                        builder: (context) {
+                                          return AlertDialog(
+                                            title: Text('Email Sent!'),
+                                            content: Text(
+                                                'The password resent email has been sent!'),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () =>
+                                                    Navigator.of(context).pop(),
+                                                child: Text('Ok!'),
+                                              )
+                                            ],
+                                          );
+                                        },
+                                      )
+                                    });
+                          },
+                          child: Container(
+                            child: Text(
+                              'Forgot Password?',
+                              style: kCalloutLabelStyle.copyWith(
+                                  color: Color(0x721b1e9c)),
+                            ),
                           ),
                         ),
                       ],
