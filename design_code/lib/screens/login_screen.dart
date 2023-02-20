@@ -1,6 +1,7 @@
 import 'package:design_code/constants.dart';
 import 'package:design_code/screens/home_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -12,6 +13,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   late String email;
   late String password;
+  final _auth = FirebaseAuth.instance;
 
   @override
   Widget build(BuildContext context) {
@@ -146,11 +148,59 @@ class _LoginScreenState extends State<LoginScreen> {
                         Row(
                           children: [
                             GestureDetector(
-                              onTap: () {
-                                Navigator.push(
+                              onTap: () async {
+                                try {
+                                  // try to signin user with email and password
+                                  // then navigate to home screen
+                                  await _auth.signInWithEmailAndPassword(
+                                      email: email, password: password);
+                                  Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                        builder: (context) => HomeScreen()));
+                                      builder: (context) => HomeScreen(),
+                                      fullscreenDialog: false,
+                                    ),
+                                  );
+                                } on FirebaseAuthException catch (err) {
+                                  if (err.code == 'user-not-found') {
+                                    try {
+                                      // if user not found, create a user with email and password
+                                      // then navigate to home screen
+                                      await _auth
+                                          .createUserWithEmailAndPassword(
+                                              email: email, password: password)
+                                          .then((user) => {
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        HomeScreen(),
+                                                    fullscreenDialog: false,
+                                                  ),
+                                                ),
+                                              });
+                                    } catch (err) {}
+                                  } else {
+                                    // if there are other errors, show the dialog with error
+                                    // user needs to dismiss the dialog
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) {
+                                        return AlertDialog(
+                                          title: Text('Error'),
+                                          content: Text(err.message.toString()),
+                                          actions: [
+                                            TextButton(
+                                                onPressed: () {
+                                                  Navigator.of(context).pop();
+                                                },
+                                                child: Text('Ok!'))
+                                          ],
+                                        );
+                                      },
+                                    );
+                                  }
+                                }
                               },
                               child: Container(
                                 width: MediaQuery.of(context).size.width * 0.3,
