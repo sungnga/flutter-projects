@@ -94,7 +94,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                       child: TextField(
                                         onChanged: (textEntered) {
                                           email = textEntered;
-                                          print(email);
                                         },
                                         cursorColor: kPrimaryLabelColor,
                                         decoration: InputDecoration(
