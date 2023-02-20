@@ -17,7 +17,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: FirebaseAuth.instance.currentUser == null ? LoginScreen() : HomeScreen(),
+      // home: FirebaseAuth.instance.currentUser == null ? LoginScreen() : HomeScreen(),
+      home: LoginScreen(),
     );
   }
 }

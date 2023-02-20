@@ -2,6 +2,7 @@ import 'package:design_code/constants.dart';
 import 'package:design_code/screens/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,6 +15,25 @@ class _LoginScreenState extends State<LoginScreen> {
   late String email;
   late String password;
   final _auth = FirebaseAuth.instance;
+  final _firestore = FirebaseFirestore.instance;
+
+  Future<dynamic> createNewUserData() async {
+    try {
+      // create users collection to cloud_firestore
+      await _firestore.collection('users').doc(_auth.currentUser?.uid).set({
+        'name': 'User',
+        'uid': _auth.currentUser?.uid,
+        'bio': 'Design+Code student',
+        'completed': [],
+        'recents': [],
+        'badges': [],
+        'certificates': [],
+        'profilePic': ''
+      });
+    } catch (err) {
+      print(err);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -171,6 +191,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                               email: email, password: password)
                                           .then((user) {
                                         user.user!.sendEmailVerification();
+                                        createNewUserData();
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
