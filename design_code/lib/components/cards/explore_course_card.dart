@@ -36,6 +36,8 @@ class ExploreCourseCard extends StatelessWidget {
                       Text(
                         course.courseTitle,
                         style: kCardTitleStyle,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       )
                     ],
                   ),
