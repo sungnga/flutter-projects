@@ -3,10 +3,12 @@ import 'package:design_code/components/sidebar_button.dart';
 import 'package:design_code/constants.dart';
 import 'package:design_code/screens/profile_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class HomeScreenNavBar extends StatelessWidget {
-  const HomeScreenNavBar({super.key, required this.triggerAnimation});
+  HomeScreenNavBar({super.key, required this.triggerAnimation});
 
+  final photoURL = FirebaseAuth.instance.currentUser!.photoURL;
   final void Function() triggerAnimation;
 
   @override
@@ -31,8 +33,19 @@ class HomeScreenNavBar extends StatelessWidget {
             onTap: (() => Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => ProfileScreen()))),
             child: CircleAvatar(
+              backgroundColor: Color(0xffe7eefb),
               radius: 18.0,
-              backgroundImage: AssetImage('asset/images/profile.jpg'),
+              child: (photoURL != null)
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(18.0),
+                      child: Image.network(
+                        photoURL.toString(),
+                        width: 36.0,
+                        height: 36.0,
+                        fit: BoxFit.cover,
+                      ),
+                    )
+                  : Icon(Icons.person),
             ),
           ),
         ],

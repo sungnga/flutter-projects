@@ -7,6 +7,7 @@ import 'package:design_code/components/lists/completed_courses_list.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -22,12 +23,47 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   var name = 'Loading...';
   var bio = 'Loading...';
+  var photoURL = FirebaseAuth.instance.currentUser!.photoURL;
 
   @override
   void initState() {
     super.initState();
+    // force firebase to reload the info every time the profile screen is initialized
+    _auth.currentUser!.reload();
     loadUserData();
     loadBadges();
+  }
+
+  Future<void> getImage() async {
+    final ImagePicker _picker = ImagePicker();
+
+    // picking an image from photo library
+    final XFile? pickedImage =
+        await _picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedImage != null) {
+      // store the picked image in an image file
+      File _image = File(pickedImage.path);
+
+      // store the image file in profile_pictures folder in firebase_storage
+      _storage
+          .ref('profile_pictures/${_auth.currentUser!.uid}.jpg')
+          .putFile(_image)
+          .then((snapshot) {
+        snapshot.ref.getDownloadURL().then((url) {
+          // update user profilePic property in users collection in firestore
+          _firestore
+              .collection('users')
+              .doc(_auth.currentUser!.uid)
+              .update({'profilePic': url}).then((snapshot) {
+            // update currentUser photoURL property in firebase_auth
+            _auth.currentUser!.updatePhotoURL(url);
+          });
+        });
+      });
+    } else {
+      print('An image was not selected');
+    }
   }
 
   // read user data from firestore using the .get() method
@@ -218,26 +254,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 20.0),
                       child: Row(
                         children: [
-                          Container(
-                            width: 84.0,
-                            height: 84.0,
-                            decoration: BoxDecoration(
-                                gradient: RadialGradient(colors: [
-                                  Color(0xff00aeff),
-                                  Color(0xff0076ff)
-                                ]),
-                                borderRadius: BorderRadius.circular(42.0)),
-                            child: Padding(
-                              padding: const EdgeInsets.all(6.0),
-                              child: Container(
-                                padding: EdgeInsets.all(6.0),
-                                decoration: BoxDecoration(
-                                    color: kBackgroundColor,
-                                    borderRadius: BorderRadius.circular(42.0)),
-                                child: CircleAvatar(
-                                  backgroundImage:
-                                      AssetImage('asset/images/profile.jpg'),
-                                  radius: 30.0,
+                          GestureDetector(
+                            onTap: () => getImage(),
+                            child: Container(
+                              width: 84.0,
+                              height: 84.0,
+                              decoration: BoxDecoration(
+                                  gradient: RadialGradient(colors: [
+                                    Color(0xff00aeff),
+                                    Color(0xff0076ff)
+                                  ]),
+                                  borderRadius: BorderRadius.circular(42.0)),
+                              child: Padding(
+                                padding: const EdgeInsets.all(6.0),
+                                child: Container(
+                                  padding: EdgeInsets.all(6.0),
+                                  decoration: BoxDecoration(
+                                      color: kBackgroundColor,
+                                      borderRadius:
+                                          BorderRadius.circular(42.0)),
+                                  child: CircleAvatar(
+                                    backgroundColor: Color(0xffe7eefb),
+                                    radius: 30.0,
+                                    child: (photoURL != null)
+                                        ? ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(30.0),
+                                            child: Image.network(
+                                              photoURL.toString(),
+                                              width: 60.0,
+                                              height: 60.0,
+                                              fit: BoxFit.cover,
+                                            ),
+                                          )
+                                        : Icon(Icons.person),
+                                  ),
                                 ),
                               ),
                             ),
@@ -315,8 +366,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     offset: Offset(0, 12),
                                     blurRadius: 18.0)
                               ]),
-                              child:
-                                  Image.network('${badges[index]}'),
+                              child: Image.network('${badges[index]}'),
                             );
                           }),
                     ),

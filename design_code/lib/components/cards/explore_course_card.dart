@@ -14,24 +14,24 @@ class ExploreCourseCard extends StatefulWidget {
 
 class _ExploreCourseCardState extends State<ExploreCourseCard> {
   final _storage = FirebaseStorage.instance;
-  late String illustrationURL;
+  // var illustrationURL;
 
   @override
   void initState() {
     super.initState();
-    getIllustration();
+    // getIllustration();
   }
 
-  void getIllustration() {
-    _storage
-        .ref('illustrations/${widget.course.illustration}')
-        .getDownloadURL()
-        .then((url) {
-      setState(() {
-        illustrationURL = url;
-      });
-    });
-  }
+  // void getIllustration() {
+  //   _storage
+  //       .ref('illustrations/${widget.course.illustration}')
+  //       .getDownloadURL()
+  //       .then((url) {
+  //     setState(() {
+  //       illustrationURL = url;
+  //     });
+  //   });
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -55,6 +55,8 @@ class _ExploreCourseCardState extends State<ExploreCourseCard> {
                       Text(
                         widget.course.courseSubtitle,
                         style: kCardSubtitleStyle,
+                        // maxLines: 2,
+                        // overflow: TextOverflow.ellipsis,
                       ),
                       SizedBox(
                         height: 6.0,
@@ -71,8 +73,19 @@ class _ExploreCourseCardState extends State<ExploreCourseCard> {
                 Column(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    Image.network(
-                      illustrationURL,
+                    // (illustrationURL != null)
+                    //     ? Image.network(
+                    //         illustrationURL,
+                    //         fit: BoxFit.cover,
+                    //         height: 100.0,
+                    //       )
+                    //     : Image.asset(
+                    //         'asset/illustrations/${widget.course.illustration}',
+                    //         fit: BoxFit.cover,
+                    //         height: 100.0,
+                    //       ),
+                    Image.asset(
+                      'asset/illustrations/${widget.course.illustration}',
                       fit: BoxFit.cover,
                       height: 100.0,
                     ),
