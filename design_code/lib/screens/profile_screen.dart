@@ -13,14 +13,10 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  final List<String> badges = [
-    'badge-01.png',
-    'badge-02.png',
-    'badge-03.png',
-    'badge-04.png',
-  ];
   final _firestore = FirebaseFirestore.instance;
   final _auth = FirebaseAuth.instance;
+  
+  var badges = [];
 
   var name = 'Loading...';
   var bio = 'Loading...';
@@ -29,6 +25,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     loadUserData();
+    loadBadges();
   }
 
   // read user data from firestore using the .get() method
@@ -80,6 +77,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ],
             );
           });
+    });
+  }
+
+  void loadBadges() {
+    _firestore
+        .collection('users')
+        .doc(_auth.currentUser!.uid)
+        .get()
+        .then((snapshot) {
+      for (var badge in snapshot.data()!['badges']) {
+        setState(() {
+          badges.add(badge);
+        });
+      }
     });
   }
 
