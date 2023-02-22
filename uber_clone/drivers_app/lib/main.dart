@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:drivers_app/screens/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -9,11 +10,7 @@ void main() async {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Welcome to Drivers App'),
-        ),
-      ),
+      home: const MySplashScreen(),
     ),
   ));
 }
