@@ -2,7 +2,10 @@ import 'package:drivers_app/components/progress_dialog.dart';
 import 'package:drivers_app/screens/car_info_screen.dart';
 import 'package:drivers_app/screens/login_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:drivers_app/authentication/auth.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -27,13 +30,65 @@ class _SignUpScreenState extends State<SignUpScreen> {
     } else if (passwordTextEditingController.text.length < 6) {
       Fluttertoast.showToast(msg: "Password must be at least 6 characters.");
     } else {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (BuildContext context) {
-          return ProgressDialog(message: 'Processing...',);
-        },
-      );
+      saveDriverInfo();
+    }
+  }
+
+  Future saveDriverInfo() async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return ProgressDialog(
+          message: 'Processing...',
+        );
+      },
+    );
+
+    // create firebase user with email and password
+    // firebaseUser is instance of the firebase_auth User class
+    // NOTE: fAuth object was instantiated in auth.dart file
+    final User? firebaseUser = (await fAuth
+            .createUserWithEmailAndPassword(
+      email: emailTextEditingController.text.trim(),
+      password: passwordTextEditingController.text.trim(),
+    )
+            .catchError((err) {
+      Navigator.pop(context);
+      Fluttertoast.showToast(msg: "Error: ${err.toString()}");
+    }))
+        .user;
+
+    if (firebaseUser != null) {
+      // driver info
+      Map driverMap = {
+        "id": firebaseUser.uid,
+        "name": nameTextEditingController.text.trim(),
+        "email": emailTextEditingController.text.trim(),
+        "phone": phoneTextEditingController.text.trim(),
+      };
+
+      // create realtime database with drivers ref in parent node
+      DatabaseReference driversRef =
+          FirebaseDatabase.instance.ref().child('drivers');
+
+      // save driver info in firebase realtime database by driver uid
+      // and set the driver info
+      driversRef.child(firebaseUser.uid).set(driverMap);
+
+      // assign firebaseUser to currentFirebaseUser
+      // NOTE: currentFirebaseUser object was instantiated in auth.dart file
+      currentFirebaseUser = firebaseUser;
+
+      // notify driver with a message
+      Fluttertoast.showToast(msg: 'Account has been created.');
+
+      // send driver to CarInfoScreen
+      Navigator.push(
+          context, MaterialPageRoute(builder: (context) => CarInfoScreen()));
+    } else {
+      Navigator.pop(context);
+      Fluttertoast.showToast(msg: 'Create account failed.');
     }
   }
 
@@ -167,10 +222,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ElevatedButton(
                   onPressed: () {
                     validateForm();
-                    // Navigator.push(
-                    //   context,
-                    //   MaterialPageRoute(builder: (context) => CarInfoScreen()),
-                    // );
                   },
                   style: ElevatedButton.styleFrom(
                       backgroundColor: Color(0xff00AA80)),

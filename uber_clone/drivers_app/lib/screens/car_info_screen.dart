@@ -1,4 +1,9 @@
+import 'package:drivers_app/screens/main_screen.dart';
+import 'package:drivers_app/screens/splash_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:drivers_app/authentication/auth.dart';
 
 class CarInfoScreen extends StatefulWidget {
   const CarInfoScreen({super.key});
@@ -15,6 +20,50 @@ class _CarInfoScreenState extends State<CarInfoScreen> {
 
   List<String> carTypesList = ['uber-x', 'uber-go', 'bike'];
   String? selectedCarType;
+
+  void validateForm() {
+    if (carColorTextEditingController.text.isNotEmpty &&
+        carPlateNumberTextEditingController.text.isNotEmpty &&
+        carModelTextEditingController.text.isNotEmpty &&
+        selectedCarType != null) {
+      saveCarInfo();
+    } else {
+      Fluttertoast.showToast(
+        msg: 'Please provide car details.',
+        toastLength: Toast.LENGTH_LONG,
+      );
+    }
+  }
+
+  Future saveCarInfo() async {
+    // driver car info
+    Map driverCarInfoMap = {
+      "car_model": carModelTextEditingController.text.trim(),
+      "car_plate": carPlateNumberTextEditingController.text.trim(),
+      "car_color": carColorTextEditingController.text.trim(),
+      "type": selectedCarType,
+    };
+
+    // get the reference of the drivers node in realtime database
+    // assign it to driversRef
+    DatabaseReference driversRef =
+        FirebaseDatabase.instance.ref().child('drivers');
+
+    // create a subchild car_details ref under driversRef
+    // save driver car info in car_details ref in currentFirebaseUser_uid document
+    // NOTE: currentFirebaseUser object was instantiated in auth.dart file
+    driversRef
+        .child(currentFirebaseUser!.uid)
+        .child('car_details')
+        .set(driverCarInfoMap);
+
+    // notify driver with a message
+    Fluttertoast.showToast(msg: 'Success! Car details has been saved.');
+
+    // send driver to MySplashScreen
+    Navigator.push(
+        context, MaterialPageRoute(builder: (context) => MainScreen()));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -140,10 +189,7 @@ class _CarInfoScreenState extends State<CarInfoScreen> {
                 SizedBox(height: 20.0),
                 ElevatedButton(
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => CarInfoScreen()),
-                    );
+                    validateForm();
                   },
                   style: ElevatedButton.styleFrom(
                       backgroundColor: Color(0xff00AA80)),
