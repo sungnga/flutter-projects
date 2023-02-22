@@ -1,3 +1,4 @@
+import 'package:drivers_app/components/progress_dialog.dart';
 import 'package:drivers_app/screens/car_info_screen.dart';
 import 'package:drivers_app/screens/login_screen.dart';
 import 'package:flutter/material.dart';
@@ -25,6 +26,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
       Fluttertoast.showToast(msg: "Phone number is required.");
     } else if (passwordTextEditingController.text.length < 6) {
       Fluttertoast.showToast(msg: "Password must be at least 6 characters.");
+    } else {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return ProgressDialog(message: 'Processing...',);
+        },
+      );
     }
   }
 
