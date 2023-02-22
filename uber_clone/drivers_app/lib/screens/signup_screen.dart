@@ -1,6 +1,7 @@
 import 'package:drivers_app/screens/car_info_screen.dart';
 import 'package:drivers_app/screens/login_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -14,6 +15,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
   TextEditingController emailTextEditingController = TextEditingController();
   TextEditingController phoneTextEditingController = TextEditingController();
   TextEditingController passwordTextEditingController = TextEditingController();
+
+  void validateForm() {
+    if (nameTextEditingController.text.length < 3) {
+      Fluttertoast.showToast(msg: "Name must be ast least 3 characters.");
+    } else if (!emailTextEditingController.text.contains('@')) {
+      Fluttertoast.showToast(msg: "Email address is not valid.");
+    } else if (phoneTextEditingController.text.isEmpty) {
+      Fluttertoast.showToast(msg: "Phone number is required.");
+    } else if (passwordTextEditingController.text.length < 6) {
+      Fluttertoast.showToast(msg: "Password must be at least 6 characters.");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -144,10 +157,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 SizedBox(height: 28.0),
                 ElevatedButton(
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => CarInfoScreen()),
-                    );
+                    validateForm();
+                    // Navigator.push(
+                    //   context,
+                    //   MaterialPageRoute(builder: (context) => CarInfoScreen()),
+                    // );
                   },
                   style: ElevatedButton.styleFrom(
                       backgroundColor: Color(0xff00AA80)),
