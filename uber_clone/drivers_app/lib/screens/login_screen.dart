@@ -1,19 +1,18 @@
-import 'package:drivers_app/screens/car_info_screen.dart';
-import 'package:drivers_app/screens/login_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:drivers_app/screens/signup_screen.dart';
+import 'package:drivers_app/screens/main_screen.dart';
 
-class SignUpScreen extends StatefulWidget {
-  const SignUpScreen({super.key});
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
 
   @override
-  State<SignUpScreen> createState() => _SignUpScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _SignUpScreenState extends State<SignUpScreen> {
-  TextEditingController nameTextEditingController = TextEditingController();
+class _LoginScreenState extends State<LoginScreen> {
   TextEditingController emailTextEditingController = TextEditingController();
-  TextEditingController phoneTextEditingController = TextEditingController();
   TextEditingController passwordTextEditingController = TextEditingController();
+  // TextEditingController phoneTextEditingController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +31,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ),
                 SizedBox(height: 10),
                 Text(
-                  'Register as a Driver',
+                  'Login as a Driver',
                   style: TextStyle(
                     fontSize: 28.0,
                     color: Colors.grey[100],
@@ -40,31 +39,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                 ),
                 SizedBox(height: 30),
-                TextField(
-                  controller: nameTextEditingController,
-                  keyboardType: TextInputType.text,
-                  style: TextStyle(
-                    color: Colors.grey,
-                  ),
-                  decoration: const InputDecoration(
-                    labelText: 'Name',
-                    // hintText: 'Name',
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey),
-                    ),
-                    focusedBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey),
-                    ),
-                    hintStyle: TextStyle(
-                      color: Colors.grey,
-                      fontSize: 10.0,
-                    ),
-                    labelStyle: TextStyle(
-                      color: Colors.grey,
-                      fontSize: 14.0,
-                    ),
-                  ),
-                ),
                 TextField(
                   controller: emailTextEditingController,
                   keyboardType: TextInputType.emailAddress,
@@ -74,31 +48,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   decoration: const InputDecoration(
                     labelText: 'Email',
                     // hintText: 'Email',
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey),
-                    ),
-                    focusedBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey),
-                    ),
-                    hintStyle: TextStyle(
-                      color: Colors.grey,
-                      fontSize: 10.0,
-                    ),
-                    labelStyle: TextStyle(
-                      color: Colors.grey,
-                      fontSize: 14.0,
-                    ),
-                  ),
-                ),
-                TextField(
-                  controller: phoneTextEditingController,
-                  keyboardType: TextInputType.phone,
-                  style: TextStyle(
-                    color: Colors.grey,
-                  ),
-                  decoration: const InputDecoration(
-                    labelText: 'Phone',
-                    // hintText: 'Phone',
                     enabledBorder: UnderlineInputBorder(
                       borderSide: BorderSide(color: Colors.grey),
                     ),
@@ -146,13 +95,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => CarInfoScreen()),
+                      MaterialPageRoute(builder: (context) => MainScreen()),
                     );
                   },
                   style: ElevatedButton.styleFrom(
                       backgroundColor: Color(0xff00AA80)),
                   child: Text(
-                    'Create account',
+                    'Login',
                     style: TextStyle(color: Colors.white, fontSize: 18.0),
                   ),
                 ),
@@ -160,11 +109,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => LoginScreen()),
+                      MaterialPageRoute(builder: (context) => SignUpScreen()),
                     );
                   },
                   child: const Text(
-                    "Already have an account? Login here.",
+                    "Don't have an account? Sign up here.",
                     style: TextStyle(
                       color: Colors.grey,
                     ),
