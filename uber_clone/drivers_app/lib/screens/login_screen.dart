@@ -1,6 +1,10 @@
+import 'package:drivers_app/authentication/auth.dart';
+import 'package:drivers_app/components/progress_dialog.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:drivers_app/screens/signup_screen.dart';
 import 'package:drivers_app/screens/main_screen.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -12,7 +16,42 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   TextEditingController emailTextEditingController = TextEditingController();
   TextEditingController passwordTextEditingController = TextEditingController();
-  // TextEditingController phoneTextEditingController = TextEditingController();
+
+  void validateForm() {
+    if (!emailTextEditingController.text.contains('@')) {
+      Fluttertoast.showToast(msg: "Email address is not valid.");
+    } else if (passwordTextEditingController.text.isEmpty) {
+      Fluttertoast.showToast(msg: "Password is required.");
+    } else {
+      loginDriver();
+    }
+  }
+
+  void loginDriver() async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return ProgressDialog(
+          message: 'Processing...',
+        );
+      },
+    );
+
+    try {
+      final firebaseUser = await fAuth.signInWithEmailAndPassword(
+        email: emailTextEditingController.text.trim(),
+        password: passwordTextEditingController.text.trim(),
+      );
+
+      currentFirebaseUser = firebaseUser.user;
+      Navigator.push(
+          context, MaterialPageRoute(builder: (context) => MainScreen()));
+    } on FirebaseAuthException catch (err) {
+      Navigator.pop(context);
+      Fluttertoast.showToast(msg: err.message.toString());
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -93,10 +132,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 SizedBox(height: 28.0),
                 ElevatedButton(
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => MainScreen()),
-                    );
+                    validateForm();
                   },
                   style: ElevatedButton.styleFrom(
                       backgroundColor: Color(0xff00AA80)),
