@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:users_app/assistants/assistant_methods.dart';
 import 'dart:async';
 import 'package:users_app/authentication/auth.dart';
 import 'package:users_app/screens/login_screen.dart';
@@ -13,6 +14,9 @@ class MySplashScreen extends StatefulWidget {
 
 class _MySplashScreenState extends State<MySplashScreen> {
   startTimer() {
+    // if user is authenticated, get user info from firebase realtime database
+    fAuth.currentUser != null ? AssistantMethods.readCurrentOnlineUserInfo() : null;
+
     Timer(const Duration(seconds: 2), () async {
       // check if user is authenticated aka is user logged in
       if (await fAuth.currentUser != null) {
