@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:users_app/authentication/auth.dart';
+import 'package:users_app/screens/login_screen.dart';
 import 'package:users_app/screens/main_screen.dart';
 
 class MySplashScreen extends StatefulWidget {
@@ -23,10 +24,10 @@ class _MySplashScreenState extends State<MySplashScreen> {
           MaterialPageRoute(builder: (context) => MainScreen()),
         );
       } else {
-        // Navigator.push(
-        //   context,
-        //   MaterialPageRoute(builder: (context) => LoginScreen()),
-        // );
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => LoginScreen()),
+        );
       }
     });
   }
