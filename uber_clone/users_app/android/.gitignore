@@ -12,3 +12,5 @@ app/google-services.json
 key.properties
 **/*.keystore
 **/*.jks
+
+app/src/main/AndroidManifest.xml
