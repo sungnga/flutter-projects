@@ -1,5 +1,4 @@
 import 'package:drivers_app/screens/main_screen.dart';
-import 'package:drivers_app/screens/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -28,14 +27,11 @@ class _CarInfoScreenState extends State<CarInfoScreen> {
         selectedCarType != null) {
       saveCarInfo();
     } else {
-      Fluttertoast.showToast(
-        msg: 'Please provide car details.',
-        toastLength: Toast.LENGTH_LONG,
-      );
+      Fluttertoast.showToast(msg: 'Please provide car details.');
     }
   }
 
-  Future saveCarInfo() async {
+  void saveCarInfo() {
     // driver car info
     Map driverCarInfoMap = {
       "car_model": carModelTextEditingController.text.trim(),
@@ -44,25 +40,30 @@ class _CarInfoScreenState extends State<CarInfoScreen> {
       "type": selectedCarType,
     };
 
-    // get the reference of the drivers node in realtime database
-    // assign it to driversRef
-    DatabaseReference driversRef =
-        FirebaseDatabase.instance.ref().child('drivers');
+    try {
+      // get the reference of the drivers node in firebase realtime database
+      // assign it to driversRef variable
+      DatabaseReference driversRef =
+          FirebaseDatabase.instance.ref().child('drivers');
 
-    // create a subchild car_details ref under driversRef
-    // save driver car info in car_details ref in currentFirebaseUser_uid document
-    // NOTE: currentFirebaseUser object was instantiated in auth.dart file
-    driversRef
-        .child(currentFirebaseUser!.uid)
-        .child('car_details')
-        .set(driverCarInfoMap);
+      // find currentFireUser by their uid in driversRef
+      // create a subchild car_details ref under that currentFirebaseUser_uid
+      // set driver car info in car_details ref
+      // NOTE: currentFirebaseUser object was instantiated in auth.dart file
+      driversRef
+          .child(currentFirebaseUser!.uid)
+          .child('car_details')
+          .set(driverCarInfoMap);
 
-    // notify driver with a message
-    Fluttertoast.showToast(msg: 'Success! Car details has been saved.');
+      // notify driver with a message
+      Fluttertoast.showToast(msg: 'Success! Car details has been saved.');
 
-    // send driver to MySplashScreen
-    Navigator.push(
-        context, MaterialPageRoute(builder: (context) => MainScreen()));
+      // send driver to MySplashScreen
+      Navigator.push(
+          context, MaterialPageRoute(builder: (context) => MainScreen()));
+    } catch (err) {
+      Fluttertoast.showToast(msg: err.toString());
+    }
   }
 
   @override

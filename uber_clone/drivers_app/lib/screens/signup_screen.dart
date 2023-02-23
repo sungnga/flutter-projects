@@ -34,7 +34,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
   }
 
-  Future saveDriverInfo() async {
+  void saveDriverInfo() async {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -45,40 +45,33 @@ class _SignUpScreenState extends State<SignUpScreen> {
       },
     );
 
-    // create firebase user with email and password
-    // firebaseUser is instance of the firebase_auth User class
-    // NOTE: fAuth object was instantiated in auth.dart file
-    final User? firebaseUser = (await fAuth
-            .createUserWithEmailAndPassword(
-      email: emailTextEditingController.text.trim(),
-      password: passwordTextEditingController.text.trim(),
-    )
-            .catchError((err) {
-      Navigator.pop(context);
-      Fluttertoast.showToast(msg: "Error: ${err.toString()}");
-    }))
-        .user;
+    try {
+      // create driver account
+      final firebaseUser = await fAuth.createUserWithEmailAndPassword(
+        email: emailTextEditingController.text.trim(),
+        password: passwordTextEditingController.text.trim(),
+      );
 
-    if (firebaseUser != null) {
+      // ---- save driver info to firebase realtime database ----
       // driver info
       Map driverMap = {
-        "id": firebaseUser.uid,
+        "id": firebaseUser.user!.uid,
         "name": nameTextEditingController.text.trim(),
         "email": emailTextEditingController.text.trim(),
         "phone": phoneTextEditingController.text.trim(),
       };
 
-      // create realtime database with drivers ref in parent node
+      // create realtime database with drivers node
+      // reference the drivers node as driversRef
       DatabaseReference driversRef =
           FirebaseDatabase.instance.ref().child('drivers');
 
-      // save driver info in firebase realtime database by driver uid
-      // and set the driver info
-      driversRef.child(firebaseUser.uid).set(driverMap);
+      // save driver info in driverRef by the driver_uid
+      driversRef.child(firebaseUser.user!.uid).set(driverMap);
 
-      // assign firebaseUser to currentFirebaseUser
+      // set firebaseUser to currentFirebaseUser
       // NOTE: currentFirebaseUser object was instantiated in auth.dart file
-      currentFirebaseUser = firebaseUser;
+      currentFirebaseUser = firebaseUser.user;
 
       // notify driver with a message
       Fluttertoast.showToast(msg: 'Account has been created.');
@@ -86,9 +79,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
       // send driver to CarInfoScreen
       Navigator.push(
           context, MaterialPageRoute(builder: (context) => CarInfoScreen()));
-    } else {
+    } on FirebaseAuthException catch (err) {
       Navigator.pop(context);
-      Fluttertoast.showToast(msg: 'Create account failed.');
+      Fluttertoast.showToast(msg: err.message.toString());
     }
   }
 
