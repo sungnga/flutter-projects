@@ -1,6 +1,8 @@
 import 'package:drivers_app/authentication/auth.dart';
 import 'package:drivers_app/components/progress_dialog.dart';
+import 'package:drivers_app/screens/splash_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:drivers_app/screens/signup_screen.dart';
 import 'package:drivers_app/screens/main_screen.dart';
@@ -44,9 +46,24 @@ class _LoginScreenState extends State<LoginScreen> {
         password: passwordTextEditingController.text.trim(),
       );
 
-      currentFirebaseUser = firebaseUser.user;
-      Navigator.push(
-          context, MaterialPageRoute(builder: (context) => MainScreen()));
+      DatabaseReference driversRef =
+          FirebaseDatabase.instance.ref().child('drivers');
+
+      // Check if the firebaseUser_uid exists in the drivers node in db
+      driversRef.child(firebaseUser.user!.uid).once().then((driverKey) {
+        final snap = driverKey.snapshot;
+        // If true, user is a driver and allow to MainScreen
+        if (snap.value != null) {
+          currentFirebaseUser = firebaseUser.user;
+          Navigator.push(
+              context, MaterialPageRoute(builder: (context) => MainScreen()));
+        } else {
+          Fluttertoast.showToast(msg: "No account exist with this email.");
+          fAuth.signOut();
+          Navigator.push(context,
+              MaterialPageRoute(builder: (context) => MySplashScreen()));
+        }
+      });
     } on FirebaseAuthException catch (err) {
       Navigator.pop(context);
       Fluttertoast.showToast(msg: err.message.toString());
