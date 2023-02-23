@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:users_app/authentication/auth.dart';
@@ -44,9 +45,24 @@ class _LoginScreenState extends State<LoginScreen> {
         password: passwordTextEditingController.text.trim(),
       );
 
-      currentFirebaseUser = firebaseUser.user;
-      Navigator.push(
-          context, MaterialPageRoute(builder: (context) => MainScreen()));
+      DatabaseReference usersRef =
+          FirebaseDatabase.instance.ref().child('users');
+
+      // Check if the firebaseUser_uid exists in the users node in db
+      usersRef.child(firebaseUser.user!.uid).once().then((userKey) {
+        final snap = userKey.snapshot;
+        // If true, user has a user account and allow to MainScreen
+        if (snap.value != null) {
+          currentFirebaseUser = firebaseUser.user;
+          Navigator.push(
+              context, MaterialPageRoute(builder: (context) => MainScreen()));
+        } else {
+          Fluttertoast.showToast(msg: "No account exist with this email.");
+          fAuth.signOut();
+          Navigator.push(context,
+              MaterialPageRoute(builder: (context) => LoginScreen()));
+        }
+      });
     } on FirebaseAuthException catch (err) {
       Navigator.pop(context);
       Fluttertoast.showToast(msg: err.message.toString());
