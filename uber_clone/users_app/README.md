@@ -4,3 +4,4 @@
 - firebase_database
 - fluttertoast
 - google_maps_flutter
+- geolocator
