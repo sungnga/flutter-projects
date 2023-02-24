@@ -25,7 +25,7 @@ class _MainScreenState extends State<MainScreen> {
   );
 
   // GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
-  double searchLocationContainerHeight = 240;
+  double searchLocationContainerHeight = 300;
 
   Position? userCurrentPosition;
   var geoLocator = Geolocator();
@@ -93,9 +93,13 @@ class _MainScreenState extends State<MainScreen> {
     CameraPosition cameraPosition =
         CameraPosition(target: latLngPosition, zoom: 14);
 
-    // this is the blue dot on google map of user position
+    // this is the blue dot on google map showing user current position
     newGoogleMapController!
         .animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
+
+    String humanReadableAddress =
+        await AssistantMethods.searchAddressForGeoCoord(userCurrentPosition!);
+    print("Your address is: ${humanReadableAddress}");
   }
 
   @override
@@ -125,7 +129,7 @@ class _MainScreenState extends State<MainScreen> {
               newGoogleMapController = controller;
               newGoogleMapController!.setMapStyle(blackThemeMapStyle);
               setState(() {
-                bottomPaddingOfMap = 230.0;
+                bottomPaddingOfMap = 310.0;
               });
               getUserCurrentPosition();
             },
