@@ -14,3 +14,5 @@
   - Need to enable this api in google library under this project
 - Google Maps SDK for Android
 - Google Maps SDK for iOS
+- Google Places API - autocomplete place search
+  - docs: https://developers.google.com/maps/documentation/places/web-service/autocomplete

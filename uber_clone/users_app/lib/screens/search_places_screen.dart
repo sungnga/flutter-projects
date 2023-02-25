@@ -1,6 +1,6 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
+import 'package:users_app/assistants/request_assistant.dart';
+import 'package:users_app/google_maps/map_key.dart';
 
 class SearchPlacesScreen extends StatefulWidget {
   const SearchPlacesScreen({super.key});
@@ -9,7 +9,27 @@ class SearchPlacesScreen extends StatefulWidget {
   State<SearchPlacesScreen> createState() => _SearchPlacesScreenState();
 }
 
+// GOOGLE PLACES API - PLACE AUTOCOMPLETE
+// docs: https://developers.google.com/maps/documentation/places/web-service/autocomplete
+
 class _SearchPlacesScreenState extends State<SearchPlacesScreen> {
+  void findPlaceAutocompleteSearch(String inputText) async {
+    if (inputText.length > 1) {
+      // Search 'country short name 2 letters' to find the country
+      String urlAutocompleteSearch =
+          "https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$inputText&key=$mapKey&components=country:US";
+
+      var responseAutocompleteSearch =
+          await RequestAssistant.receiveRequest(urlAutocompleteSearch);
+      if (responseAutocompleteSearch == "Request failed.") {
+        return;
+      }
+
+      print('This is autocomplete search response:');
+      print(responseAutocompleteSearch);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -33,7 +53,9 @@ class _SearchPlacesScreenState extends State<SearchPlacesScreen> {
               padding: const EdgeInsets.all(10.0),
               child: Column(
                 children: [
-                  SizedBox(height: 25.0,),
+                  SizedBox(
+                    height: 25.0,
+                  ),
                   Stack(
                     children: [
                       GestureDetector(
@@ -55,20 +77,24 @@ class _SearchPlacesScreenState extends State<SearchPlacesScreen> {
                       ),
                     ],
                   ),
-                  SizedBox(height: 16.0,),
+                  SizedBox(
+                    height: 16.0,
+                  ),
                   Row(
                     children: [
                       Icon(
                         Icons.adjust_sharp,
                         color: Colors.grey,
                       ),
-                      SizedBox(width: 14.0,),
+                      SizedBox(
+                        width: 14.0,
+                      ),
                       Expanded(
                         child: Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: TextField(
-                            onChanged: (newText) {
-                              
+                            onChanged: (inputValue) {
+                              findPlaceAutocompleteSearch(inputValue);
                             },
                             decoration: InputDecoration(
                               hintText: 'Search location',
