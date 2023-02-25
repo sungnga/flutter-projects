@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:users_app/assistants/request_assistant.dart';
 import 'package:users_app/google_maps/map_key.dart';
+import 'package:users_app/models/predicted_places.dart';
+import 'package:users_app/components/place_prediction_tile.dart';
 
 class SearchPlacesScreen extends StatefulWidget {
   const SearchPlacesScreen({super.key});
@@ -13,6 +15,8 @@ class SearchPlacesScreen extends StatefulWidget {
 // docs: https://developers.google.com/maps/documentation/places/web-service/autocomplete
 
 class _SearchPlacesScreenState extends State<SearchPlacesScreen> {
+  List<PredictedPlaces> placesPredictedList = [];
+
   void findPlaceAutocompleteSearch(String inputText) async {
     if (inputText.length > 1) {
       // Search 'country short name 2 letters' to find the country
@@ -25,8 +29,17 @@ class _SearchPlacesScreenState extends State<SearchPlacesScreen> {
         return;
       }
 
-      print('This is autocomplete search response:');
-      print(responseAutocompleteSearch);
+      if (responseAutocompleteSearch['status'] == 'OK') {
+        var placePredictions = responseAutocompleteSearch['predictions'];
+
+        var placePredictionsList = (placePredictions as List)
+            .map((jsonData) => PredictedPlaces.fromJson(jsonData))
+            .toList();
+
+        setState(() {
+          placesPredictedList = placePredictionsList;
+        });
+      }
     }
   }
 
@@ -36,6 +49,7 @@ class _SearchPlacesScreenState extends State<SearchPlacesScreen> {
       backgroundColor: Colors.black,
       body: Column(
         children: [
+          // search location textfield
           Container(
             height: 160.0,
             decoration: BoxDecoration(
@@ -116,6 +130,28 @@ class _SearchPlacesScreenState extends State<SearchPlacesScreen> {
               ),
             ),
           ),
+
+          // display place predictions result in ListView
+          (placesPredictedList.length > 0)
+              ? Expanded(
+                  child: ListView.separated(
+                    itemCount: placesPredictedList.length,
+                    physics: ClampingScrollPhysics(),
+                    itemBuilder: (context, index) {
+                      return PlacePredictionTile(
+                        predictedPlaces: placesPredictedList[index],
+                      );
+                    },
+                    separatorBuilder: (BuildContext context, int index) {
+                      return const Divider(
+                        height: 1,
+                        color: Colors.grey,
+                        thickness: 1,
+                      );
+                    },
+                  ),
+                )
+              : Container(),
         ],
       ),
     );
