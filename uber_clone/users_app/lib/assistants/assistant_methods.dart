@@ -5,13 +5,17 @@ import 'package:users_app/authentication/auth.dart';
 import 'package:users_app/models/user.dart';
 import 'package:users_app/google_maps/map_key.dart';
 import 'package:users_app/models/user_model.dart';
+import 'package:users_app/utils/app_info_provider.dart';
+import 'package:users_app/models/directions.dart';
+import 'package:provider/provider.dart';
 
 class AssistantMethods {
   // This method does reverse geocoding to human-readable address
   // using google geocoding api
   // docs: https://developers.google.com/maps/documentation/geocoding/requests-reverse-geocoding
   // the position arg is the userCurrentPosition in latitude and longitude
-  static Future<String> searchAddressForGeoCoord(Position position) async {
+  static Future<String> searchAddressForGeoCoord(
+      Position position, context) async {
     String apiURL =
         "https://maps.googleapis.com/maps/api/geocode/json?latlng=${position.latitude},${position.longitude}&key=$mapKey";
     String humanReadableAddress = "";
@@ -20,6 +24,14 @@ class AssistantMethods {
     var response = await RequestAssistant.receiveRequest(apiURL);
     if (response != "Request failed.") {
       humanReadableAddress = response['results'][0]['formatted_address'];
+
+      Directions userPickUpAddress = Directions();
+      userPickUpAddress.locationLatitude = position.latitude;
+      userPickUpAddress.locationLongitude = position.longitude;
+      userPickUpAddress.locationName = humanReadableAddress;
+
+      Provider.of<AppInfo>(context, listen: false)
+          .updatePickUpLocationAddress(userPickUpAddress);
     }
 
     return humanReadableAddress;

@@ -7,6 +7,8 @@ import 'package:users_app/authentication/auth.dart';
 import 'package:users_app/components/sidebar.dart';
 import 'package:users_app/constants/map_style.dart';
 import 'package:users_app/screens/login_screen.dart';
+import 'package:users_app/utils/app_info_provider.dart';
+import 'package:provider/provider.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -98,7 +100,8 @@ class _MainScreenState extends State<MainScreen> {
         .animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
 
     String humanReadableAddress =
-        await AssistantMethods.searchAddressForGeoCoord(userCurrentPosition!);
+        await AssistantMethods.searchAddressForGeoCoord(
+            userCurrentPosition!, context);
     print("Your address is: ${humanReadableAddress}");
   }
 
@@ -185,7 +188,7 @@ class _MainScreenState extends State<MainScreen> {
                           ),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: const [
+                            children: [
                               Text(
                                 'From',
                                 style: TextStyle(
@@ -195,11 +198,17 @@ class _MainScreenState extends State<MainScreen> {
                                 ),
                               ),
                               Text(
-                                'Your current location',
-                                style: TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 14.0,
-                                ),
+                                Provider.of<AppInfo>(context)
+                                            .userPickUpLocation !=
+                                        null
+                                    ? (Provider.of<AppInfo>(context)
+                                                .userPickUpLocation!
+                                                .locationName!)
+                                            .substring(0, 30) +
+                                        "..."
+                                    : "Not getting address",
+                                style:
+                                    TextStyle(color: Colors.grey, fontSize: 14),
                               ),
                             ],
                           ),
@@ -227,7 +236,7 @@ class _MainScreenState extends State<MainScreen> {
                           ),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: const [
+                            children: [
                               Text(
                                 'To',
                                 style: TextStyle(

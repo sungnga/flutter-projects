@@ -5,6 +5,7 @@
 - fluttertoast
 - google_maps_flutter
 - geolocator
+- provider
 
 
 ### APIs
