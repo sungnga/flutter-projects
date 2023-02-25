@@ -202,11 +202,7 @@ class _MainScreenState extends State<MainScreen> {
                                 Provider.of<AppInfo>(context)
                                             .userPickUpLocation !=
                                         null
-                                    ? (Provider.of<AppInfo>(context)
-                                                .userPickUpLocation!
-                                                .locationName!)
-                                            .substring(0, 30) +
-                                        "..."
+                                    ? "${(Provider.of<AppInfo>(context).userPickUpLocation!.locationName!).substring(0, 30)} ..."
                                     : "Not getting address",
                                 style:
                                     TextStyle(color: Colors.grey, fontSize: 14),
@@ -228,7 +224,15 @@ class _MainScreenState extends State<MainScreen> {
                       ),
                       GestureDetector(
                         onTap: () {
-                          Navigator.push(context, MaterialPageRoute(builder: (context) => SearchPlacesScreen()));
+                          var responseFromSearchScreen = Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => SearchPlacesScreen()));
+
+                          if (responseFromSearchScreen == "obtainedDropOff") {
+                            // draw routes
+
+                          }
                         },
                         child: Row(
                           children: [
@@ -251,7 +255,13 @@ class _MainScreenState extends State<MainScreen> {
                                   ),
                                 ),
                                 Text(
-                                  'Where to go?',
+                                  Provider.of<AppInfo>(context)
+                                              .userDropOffLocation !=
+                                          null
+                                      ? Provider.of<AppInfo>(context)
+                                          .userDropOffLocation!
+                                          .locationName!
+                                      : 'Where to go?',
                                   style: TextStyle(
                                     color: Colors.grey,
                                     fontSize: 14.0,

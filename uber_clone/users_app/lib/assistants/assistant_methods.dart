@@ -30,6 +30,7 @@ class AssistantMethods {
       userPickUpAddress.locationLongitude = position.longitude;
       userPickUpAddress.locationName = humanReadableAddress;
 
+      // update the userPickUpLocation state in AppInfo provider
       Provider.of<AppInfo>(context, listen: false)
           .updatePickUpLocationAddress(userPickUpAddress);
     }

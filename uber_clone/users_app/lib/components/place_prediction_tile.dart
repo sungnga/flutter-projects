@@ -4,6 +4,8 @@ import 'package:users_app/assistants/request_assistant.dart';
 import 'package:users_app/components/progress_dialog.dart';
 import 'package:users_app/google_maps/map_key.dart';
 import 'package:users_app/models/directions.dart';
+import 'package:users_app/utils/app_info_provider.dart';
+import 'package:provider/provider.dart';
 
 // PLACE IDS DOCS:
 // https://developers.google.com/maps/documentation/places/web-service/place-id
@@ -32,6 +34,9 @@ class PlacePredictionTile extends StatelessWidget {
     var responseApi =
         await RequestAssistant.receiveRequest(placeDirectionDetailsURL);
 
+    // close the ProgressDialog box after making the request
+    Navigator.pop(context);
+
     if (responseApi == "Request failed.") {
       return;
     } else {
@@ -45,9 +50,12 @@ class PlacePredictionTile extends StatelessWidget {
         directions.locationLongitude =
             responseApi["result"]["geometry"]["location"]["lng"];
 
-        print('location name: ${directions.locationName!.toString()}');
-        print('location lat: ${directions.locationLatitude!.toString()}');
-        print('location lng: ${directions.locationLongitude!.toString()}');
+        // update the userDropOffLocation state in AppInfo provider
+        Provider.of<AppInfo>(context, listen: false)
+            .updateDropOffLocationAddress(directions);
+
+        // after updating userDropOffLocation state, close the Search Drop-off Place screen
+        Navigator.pop(context, "obtainedDropOff");
       }
     }
   }

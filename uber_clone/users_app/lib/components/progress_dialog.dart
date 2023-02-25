@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class ProgressDialog extends StatelessWidget {
-  ProgressDialog({super.key, this.message});
+  ProgressDialog({super.key, required this.message});
 
   String? message;
 
