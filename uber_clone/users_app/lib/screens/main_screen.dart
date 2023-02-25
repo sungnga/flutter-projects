@@ -7,6 +7,7 @@ import 'package:users_app/authentication/auth.dart';
 import 'package:users_app/components/sidebar.dart';
 import 'package:users_app/constants/map_style.dart';
 import 'package:users_app/screens/login_screen.dart';
+import 'package:users_app/screens/search_places_screen.dart';
 import 'package:users_app/utils/app_info_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -225,36 +226,41 @@ class _MainScreenState extends State<MainScreen> {
                       SizedBox(
                         height: 16.0,
                       ),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.add_location_alt_outlined,
-                            color: Colors.grey,
-                          ),
-                          SizedBox(
-                            width: 12.0,
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'To',
-                                style: TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 14.0,
-                                  fontWeight: FontWeight.bold,
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => SearchPlacesScreen()));
+                        },
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.add_location_alt_outlined,
+                              color: Colors.grey,
+                            ),
+                            SizedBox(
+                              width: 12.0,
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'To',
+                                  style: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 14.0,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                'Where to go?',
-                                style: TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 14.0,
+                                Text(
+                                  'Where to go?',
+                                  style: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 14.0,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ],
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                       SizedBox(
                         height: 10.0,
