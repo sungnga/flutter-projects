@@ -16,3 +16,5 @@
 - Google Maps SDK for iOS
 - Google Places API - autocomplete place search
   - docs: https://developers.google.com/maps/documentation/places/web-service/autocomplete
+- Google Directions API
+  - docs: https://developers.google.com/maps/documentation/directions/overview

@@ -4,6 +4,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:users_app/assistants/assistant_methods.dart';
 import 'package:users_app/authentication/auth.dart';
+import 'package:users_app/components/progress_dialog.dart';
 import 'package:users_app/components/sidebar.dart';
 import 'package:users_app/constants/map_style.dart';
 import 'package:users_app/screens/login_screen.dart';
@@ -223,15 +224,15 @@ class _MainScreenState extends State<MainScreen> {
                         height: 16.0,
                       ),
                       GestureDetector(
-                        onTap: () {
-                          var responseFromSearchScreen = Navigator.push(
+                        onTap: () async {
+                          var responseFromSearchScreen = await Navigator.push(
                               context,
                               MaterialPageRoute(
                                   builder: (context) => SearchPlacesScreen()));
 
                           if (responseFromSearchScreen == "obtainedDropOff") {
                             // draw routes
-
+                            await drawPolyLineFromOriginToDestination();
                           }
                         },
                         child: Row(
@@ -308,6 +309,36 @@ class _MainScreenState extends State<MainScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> drawPolyLineFromOriginToDestination() async {
+    // Get userPickUpLocation and userDropOffLocation states from AppInfo provider
+    var originPosition =
+        Provider.of<AppInfo>(context, listen: false).userPickUpLocation;
+    var destinationPosition =
+        Provider.of<AppInfo>(context, listen: false).userDropOffLocation;
+
+    // convert the user's pickup and drop-off locations into LatLng (from google_map_flutter package)
+    var originLatLng = LatLng(
+        originPosition!.locationLatitude!, originPosition.locationLongitude!);
+    var destinationLatLng = LatLng(destinationPosition!.locationLatitude!,
+        destinationPosition.locationLongitude!);
+
+    showDialog(
+        context: context,
+        builder: (BuildContext context) =>
+            ProgressDialog(message: 'Getting direction...'));
+
+    // make the request to google Directions API to get direction details info
+    var directionDetailsInfo =
+        await AssistantMethods.obtainOriginToDestinationDirectionDetails(
+            originLatLng, destinationLatLng);
+
+    // close the ProgressDialog box after making the request
+    Navigator.pop(context);
+
+    print('These are points: ');
+    print(directionDetailsInfo!.ePoints);
   }
 }
 
