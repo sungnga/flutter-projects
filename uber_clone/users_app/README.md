@@ -6,6 +6,7 @@
 - google_maps_flutter
 - geolocator
 - provider
+- flutter_polyline_points
 
 
 ### APIs

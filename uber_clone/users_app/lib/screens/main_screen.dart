@@ -11,6 +11,7 @@ import 'package:users_app/screens/login_screen.dart';
 import 'package:users_app/screens/search_places_screen.dart';
 import 'package:users_app/utils/app_info_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -36,6 +37,12 @@ class _MainScreenState extends State<MainScreen> {
 
   LocationPermission? permission;
   double bottomPaddingOfMap = 0;
+
+  List<LatLng> pLineCoordinatesList = [];
+  Set<Polyline> polyLineSet = {};
+
+  Set<Marker> markerSet = {};
+  Set<Circle> circleSet = {};
 
   @override
   void initState() {
@@ -129,6 +136,9 @@ class _MainScreenState extends State<MainScreen> {
             zoomGesturesEnabled: true,
             zoomControlsEnabled: true,
             initialCameraPosition: _kGooglePlex,
+            polylines: polyLineSet,
+            markers: markerSet,
+            circles: circleSet,
             onMapCreated: (GoogleMapController controller) {
               _controllerGoogleMap.complete(controller);
               newGoogleMapController = controller;
@@ -231,7 +241,7 @@ class _MainScreenState extends State<MainScreen> {
                                   builder: (context) => SearchPlacesScreen()));
 
                           if (responseFromSearchScreen == "obtainedDropOff") {
-                            // draw routes
+                            // draw direction route
                             await drawPolyLineFromOriginToDestination();
                           }
                         },
@@ -325,9 +335,10 @@ class _MainScreenState extends State<MainScreen> {
         destinationPosition.locationLongitude!);
 
     showDialog(
-        context: context,
-        builder: (BuildContext context) =>
-            ProgressDialog(message: 'Getting direction...'));
+      context: context,
+      builder: (BuildContext context) =>
+          ProgressDialog(message: 'Getting direction...'),
+    );
 
     // make the request to google Directions API to get direction details info
     var directionDetailsInfo =
@@ -337,8 +348,111 @@ class _MainScreenState extends State<MainScreen> {
     // close the ProgressDialog box after making the request
     Navigator.pop(context);
 
-    print('These are points: ');
-    print(directionDetailsInfo!.ePoints);
+    // print('These are points: ');
+    // print(directionDetailsInfo!.ePoints);
+
+    // draw polyline based on direction ePoints
+    // google Direction API gave encoded points(ePoints) data, need to decode them first
+    PolylinePoints pPoints = PolylinePoints();
+    List<PointLatLng> decodedPolylinePointsResultList =
+        pPoints.decodePolyline(directionDetailsInfo!.ePoints.toString());
+
+    pLineCoordinatesList.clear();
+
+    if (decodedPolylinePointsResultList.isNotEmpty) {
+      decodedPolylinePointsResultList.forEach((PointLatLng pointLatLng) {
+        pLineCoordinatesList
+            .add(LatLng(pointLatLng.latitude, pointLatLng.longitude));
+      });
+    }
+
+    polyLineSet.clear();
+
+    setState(() {
+      // a polyline contains points and we draw lines between those points
+      // define the properties of the polyline
+      Polyline polyline = Polyline(
+        color: Colors.purple.shade400,
+        polylineId: PolylineId("PolylineID"),
+        jointType: JointType.round,
+        points: pLineCoordinatesList,
+        startCap: Cap.roundCap,
+        endCap: Cap.roundCap,
+        geodesic: true,
+      );
+
+      polyLineSet.add(polyline);
+    });
+
+    LatLngBounds boundsLatLng;
+    if (originLatLng.latitude > destinationLatLng.latitude &&
+        originLatLng.longitude > destinationLatLng.longitude) {
+      boundsLatLng =
+          LatLngBounds(southwest: destinationLatLng, northeast: originLatLng);
+    } else if (originLatLng.longitude > destinationLatLng.longitude) {
+      boundsLatLng = LatLngBounds(
+        southwest: LatLng(originLatLng.latitude, destinationLatLng.longitude),
+        northeast: LatLng(destinationLatLng.latitude, originLatLng.longitude),
+      );
+    } else if (originLatLng.latitude > destinationLatLng.latitude) {
+      boundsLatLng = LatLngBounds(
+        southwest: LatLng(destinationLatLng.latitude, originLatLng.longitude),
+        northeast: LatLng(originLatLng.latitude, destinationLatLng.longitude),
+      );
+    } else {
+      boundsLatLng =
+          LatLngBounds(southwest: originLatLng, northeast: destinationLatLng);
+    }
+
+    // map camera animation to show full view of direction on screen
+    newGoogleMapController!
+        .animateCamera(CameraUpdate.newLatLngBounds(boundsLatLng, 60.0));
+
+    Marker originMarker = Marker(
+      markerId: const MarkerId("originID"),
+      infoWindow:
+          InfoWindow(title: originPosition.locationName, snippet: "Origin"),
+      position: originLatLng,
+      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+    );
+
+    Marker destinationMarker = Marker(
+      markerId: const MarkerId("destinationID"),
+      infoWindow: InfoWindow(
+        title: destinationPosition.locationName,
+        snippet: "Destination",
+      ),
+      position: destinationLatLng,
+      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+    );
+
+    setState(() {
+      markerSet.add(originMarker);
+      markerSet.add(destinationMarker);
+    });
+
+    Circle originCircle = Circle(
+      circleId: const CircleId("originID"),
+      fillColor: const Color(0xff00aa80),
+      radius: 12.0,
+      strokeWidth: 3,
+      strokeColor: Colors.white,
+      center: originLatLng,
+    );
+
+    Circle destinationCircle = Circle(
+      circleId: const CircleId("destinationID"),
+      fillColor: Colors.red.shade400,
+      radius: 12.0,
+      strokeWidth: 3,
+      strokeColor: Colors.white,
+      center: destinationLatLng,
+    );
+
+    setState(() {
+      circleSet.add(originCircle);
+      circleSet.add(destinationCircle);
+    });
   }
 }
 
