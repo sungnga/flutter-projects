@@ -23,8 +23,11 @@ class _HomeTabPageState extends State<HomeTabPage> {
 
   Position? userCurrentPosition;
   var geoLocator = Geolocator();
-
   LocationPermission? permission;
+
+  String statusText = "Offline";
+  Color buttonColor = Colors.grey;
+  bool isDriverActive = false;
 
   @override
   void initState() {
@@ -98,8 +101,8 @@ class _HomeTabPageState extends State<HomeTabPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
+    return Container(
+      child: Stack(
         children: [
           GoogleMap(
             mapType: MapType.normal,
@@ -111,6 +114,53 @@ class _HomeTabPageState extends State<HomeTabPage> {
               newGoogleMapController!.setMapStyle(blackThemeMapStyle);
               getDriverCurrentPosition();
             },
+          ),
+
+          // online offline driver
+          statusText != "Online"
+              ? Container(
+                  height: MediaQuery.of(context).size.height,
+                  width: double.infinity,
+                  color: Colors.black87,
+                )
+              : Container(),
+
+          // button for online offline driver
+          Positioned(
+            top: statusText == "Online"
+                ? MediaQuery.of(context).size.height * 0.46
+                : 25.0,
+            left: 0,
+            right: 0,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                  onPressed: () {},
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: buttonColor,
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 24.0, vertical: 10.0),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(26.0)),
+                  ),
+                  child: statusText == "Online"
+                      ? Text(
+                          statusText,
+                          style: const TextStyle(
+                            fontSize: 18.0,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Icon(
+                          Icons.phonelink_ring,
+                          color: Colors.white,
+                          size: 26.0,
+                        ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
