@@ -12,6 +12,7 @@ import 'package:users_app/screens/search_places_screen.dart';
 import 'package:users_app/utils/app_info_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import 'package:users_app/models/user.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -29,7 +30,7 @@ class _MainScreenState extends State<MainScreen> {
     zoom: 14.4746,
   );
 
-  // GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
+  GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
   double searchLocationContainerHeight = 300;
 
   Position? userCurrentPosition;
@@ -43,6 +44,11 @@ class _MainScreenState extends State<MainScreen> {
 
   Set<Marker> markerSet = {};
   Set<Circle> circleSet = {};
+
+  String userName = "Your name";
+  String userEmail = "Your email";
+
+  bool openSidebar = true;
 
   @override
   void initState() {
@@ -112,21 +118,24 @@ class _MainScreenState extends State<MainScreen> {
         await AssistantMethods.searchAddressForGeoCoord(
             userCurrentPosition!, context);
     print("Your address is: ${humanReadableAddress}");
+
+    userName = userModelCurrentInfo!.name!;
+    userEmail = userModelCurrentInfo!.email!;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // key: scaffoldKey,
-      // drawer: Theme(
-      //   data: Theme.of(context).copyWith(
-      //     canvasColor: Colors.black,
-      //   ),
-      //   child: Sidebar(
-      //     name: userModelCurrentInfo!.name,
-      //     email: userModelCurrentInfo!.email,
-      //   ),
-      // ),
+      key: scaffoldKey,
+      drawer: Theme(
+        data: Theme.of(context).copyWith(
+          canvasColor: Colors.black,
+        ),
+        child: Sidebar(
+          name: userName,
+          email: userEmail,
+        ),
+      ),
       body: Stack(
         children: [
           GoogleMap(
@@ -151,16 +160,27 @@ class _MainScreenState extends State<MainScreen> {
           ),
           // custom sidebar button
           Positioned(
-            top: 54.0,
+            top: 50.0,
             left: 20.0,
             child: GestureDetector(
               onTap: () {
-                // scaffoldKey.currentState!.openDrawer();
+                if (openSidebar) {
+                  scaffoldKey.currentState!.openDrawer();
+                } else {
+                  // restart-refresh-minimize app
+                  // SystemNavigator.pop();
+
+                  // when the user clicks on the close[X] button
+                  // this cancels the destination location set by user
+                  // takes user back to MainScreen and direction polyline disappears
+                  Navigator.push(context,
+                      MaterialPageRoute(builder: (context) => MainScreen()));
+                }
               },
-              child: const CircleAvatar(
+              child: CircleAvatar(
                 backgroundColor: Colors.grey,
                 child: Icon(
-                  Icons.menu,
+                  openSidebar ? Icons.menu : Icons.close,
                   color: Colors.black,
                 ),
               ),
@@ -209,6 +229,9 @@ class _MainScreenState extends State<MainScreen> {
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
+                              SizedBox(
+                                height: 6.0,
+                              ),
                               Text(
                                 Provider.of<AppInfo>(context)
                                             .userPickUpLocation !=
@@ -241,6 +264,12 @@ class _MainScreenState extends State<MainScreen> {
                                   builder: (context) => SearchPlacesScreen()));
 
                           if (responseFromSearchScreen == "obtainedDropOff") {
+                            // once the Search Place screen is closed,
+                            // change the sidebar icon to close[X] icon
+                            setState(() {
+                              openSidebar = false;
+                            });
+
                             // draw direction route
                             await drawPolyLineFromOriginToDestination();
                           }
@@ -265,13 +294,16 @@ class _MainScreenState extends State<MainScreen> {
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
+                                SizedBox(
+                                  height: 6.0,
+                                ),
                                 Text(
                                   Provider.of<AppInfo>(context)
                                               .userDropOffLocation !=
                                           null
-                                      ? Provider.of<AppInfo>(context)
+                                      ? "${Provider.of<AppInfo>(context)
                                           .userDropOffLocation!
-                                          .locationName!
+                                          .locationName!.substring(0, 30)} ..."
                                       : 'Where to go?',
                                   style: TextStyle(
                                     color: Colors.grey,
@@ -413,7 +445,7 @@ class _MainScreenState extends State<MainScreen> {
       infoWindow:
           InfoWindow(title: originPosition.locationName, snippet: "Origin"),
       position: originLatLng,
-      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueCyan),
     );
 
     Marker destinationMarker = Marker(
@@ -423,7 +455,7 @@ class _MainScreenState extends State<MainScreen> {
         snippet: "Destination",
       ),
       position: destinationLatLng,
-      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
     );
 
     setState(() {
