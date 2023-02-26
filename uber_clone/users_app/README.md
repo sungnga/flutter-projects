@@ -7,7 +7,7 @@
 - geolocator
 - provider
 - flutter_polyline_points
-
+- flutter_geofire
 
 ### APIs
 - Google Geocoding API - reverse geocoding from geographic coordinate to human-readable address

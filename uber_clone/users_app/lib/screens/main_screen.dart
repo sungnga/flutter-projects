@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:flutter_geofire/flutter_geofire.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:users_app/assistants/assistant_methods.dart';
 import 'package:users_app/authentication/auth.dart';
@@ -13,6 +14,8 @@ import 'package:users_app/utils/app_info_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:users_app/models/user.dart';
+import 'package:users_app/assistants/geofire_assistant.dart';
+import 'package:users_app/models/active_nearby_available_drivers.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -301,9 +304,7 @@ class _MainScreenState extends State<MainScreen> {
                                   Provider.of<AppInfo>(context)
                                               .userDropOffLocation !=
                                           null
-                                      ? "${Provider.of<AppInfo>(context)
-                                          .userDropOffLocation!
-                                          .locationName!.substring(0, 30)} ..."
+                                      ? "${Provider.of<AppInfo>(context).userDropOffLocation!.locationName!.substring(0, 30)} ..."
                                       : 'Where to go?',
                                   style: TextStyle(
                                     color: Colors.grey,
@@ -484,6 +485,74 @@ class _MainScreenState extends State<MainScreen> {
     setState(() {
       circleSet.add(originCircle);
       circleSet.add(destinationCircle);
+    });
+  }
+
+  // this method is called when a driver comes online and display it on user's app
+  initializeGeoFireListener() {
+    Geofire.initialize("activeDrivers");
+
+    // 1st arg - user current position latitude
+    // 2nd arg - user current position longitude
+    // 3rd arg - distance radius around user current position in kilometer
+    // NOTE activeDrivers who are outside of this radius will not be displayed on map
+    Geofire.queryAtLocation(
+            userCurrentPosition!.latitude, userCurrentPosition!.longitude, 10)!
+        .listen((map) {
+      print(map);
+      if (map != null) {
+        var callBack = map['callBack'];
+
+        //latitude will be retrieved from map['latitude']
+        //longitude will be retrieved from map['longitude']
+
+        switch (callBack) {
+          // whenever any driver become active/online, add to our list
+          case Geofire.onKeyEntered:
+            // create one activeNearbyAvailableDriver instance
+            ActiveNearbyAvailableDrivers activeNearbyAvailableDriver =
+                ActiveNearbyAvailableDrivers();
+
+            // get driver's latLng in activeDrivers node in fb realtime db
+            // assign it to activeNearbyAvailableDrivers model
+            activeNearbyAvailableDriver.locationLatitude = map['latitude'];
+            activeNearbyAvailableDriver.locationLongitude = map['longitude'];
+            activeNearbyAvailableDriver.driverId =
+                map['key']; // key is the driver uid
+
+            // add the driver instance to the drivers list
+            GeoFireAssistant.activeNearbyAvailableDriversList
+                .add(activeNearbyAvailableDriver);
+            break;
+
+          // whenever any driver become non-active/offline
+          case Geofire.onKeyExited:
+            // remove that driver from the active drivers list
+            // map['key'] is getting driver uid in activeDrivers node in fb realtime db
+            GeoFireAssistant.deleteOfflineDriverFromList(map['key']);
+            break;
+
+          // whenever the driver moves
+          case Geofire.onKeyMoved:
+            // update the driver location in active drivers list
+            ActiveNearbyAvailableDrivers activeNearbyAvailableDriver =
+                ActiveNearbyAvailableDrivers();
+            activeNearbyAvailableDriver.locationLatitude = map['latitude'];
+            activeNearbyAvailableDriver.locationLongitude = map['longitude'];
+            activeNearbyAvailableDriver.driverId = map['key'];
+            GeoFireAssistant.updateActiveNearbyAvailableDriverLocation(
+                activeNearbyAvailableDriver);
+            break;
+
+          case Geofire.onGeoQueryReady:
+            // All Intial Data is loaded
+            print(map['result']);
+
+            break;
+        }
+      }
+
+      setState(() {});
     });
   }
 }
