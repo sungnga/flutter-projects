@@ -53,6 +53,9 @@ class _MainScreenState extends State<MainScreen> {
 
   bool openSidebar = true;
 
+  bool activeNearbyDriverKeysLoaded = false;
+  BitmapDescriptor? activeNearbyDriverIcon;
+
   @override
   void initState() {
     super.initState();
@@ -117,17 +120,21 @@ class _MainScreenState extends State<MainScreen> {
     newGoogleMapController!
         .animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
 
-    String humanReadableAddress =
-        await AssistantMethods.searchAddressForGeoCoord(
-            userCurrentPosition!, context);
-    print("Your address is: ${humanReadableAddress}");
+    // String humanReadableAddress =
+    //     await AssistantMethods.searchAddressForGeoCoord(
+    //         userCurrentPosition!, context);
+    // print("Your address is: ${humanReadableAddress}");
 
     userName = userModelCurrentInfo!.name!;
     userEmail = userModelCurrentInfo!.email!;
+
+    initializeGeoFireListener();
   }
 
   @override
   Widget build(BuildContext context) {
+    createActiveNearbyDriverIconMarker();
+
     return Scaffold(
       key: scaffoldKey,
       drawer: Theme(
@@ -507,7 +514,8 @@ class _MainScreenState extends State<MainScreen> {
         //longitude will be retrieved from map['longitude']
 
         switch (callBack) {
-          // whenever any driver become active/online, add to our list
+
+          // whenever any driver becomes active/online -> add to our active drivers list
           case Geofire.onKeyEntered:
             // create one activeNearbyAvailableDriver instance
             ActiveNearbyAvailableDrivers activeNearbyAvailableDriver =
@@ -520,19 +528,30 @@ class _MainScreenState extends State<MainScreen> {
             activeNearbyAvailableDriver.driverId =
                 map['key']; // key is the driver uid
 
-            // add the driver instance to the drivers list
+            // add the driver instance to the active drivers list
             GeoFireAssistant.activeNearbyAvailableDriversList
                 .add(activeNearbyAvailableDriver);
+
+            // if driver_uid exists in activeDrivers node in db, display driver marker on user's map
+            if (activeNearbyDriverKeysLoaded == true) {
+              displayActiveDriversOnUsersMap();
+            }
             break;
 
-          // whenever any driver become non-active/offline
+          // whenever any driver becomes non-active/offline ->
+          //   remove driver from active drivers list
+          //   display the updated list on user's map
           case Geofire.onKeyExited:
             // remove that driver from the active drivers list
             // map['key'] is getting driver uid in activeDrivers node in fb realtime db
             GeoFireAssistant.deleteOfflineDriverFromList(map['key']);
+            displayActiveDriversOnUsersMap();
             break;
 
-          // whenever the driver moves
+          // whenever the driver moves ->
+          //   update that driver latLng in model
+          //   update driver latLng in active drivers list
+          //   display the updated driver marker on user's map
           case Geofire.onKeyMoved:
             // update the driver location in active drivers list
             ActiveNearbyAvailableDrivers activeNearbyAvailableDriver =
@@ -542,12 +561,15 @@ class _MainScreenState extends State<MainScreen> {
             activeNearbyAvailableDriver.driverId = map['key'];
             GeoFireAssistant.updateActiveNearbyAvailableDriverLocation(
                 activeNearbyAvailableDriver);
+
+            // update driver marker on user's map
+            displayActiveDriversOnUsersMap();
             break;
 
+          // display those online/active drivers on user's map
           case Geofire.onGeoQueryReady:
-            // All Intial Data is loaded
-            print(map['result']);
-
+            activeNearbyDriverKeysLoaded = true;
+            displayActiveDriversOnUsersMap();
             break;
         }
       }
@@ -555,47 +577,92 @@ class _MainScreenState extends State<MainScreen> {
       setState(() {});
     });
   }
+
+  displayActiveDriversOnUsersMap() {
+    setState(() {
+      markerSet.clear();
+      circleSet.clear();
+
+      Set<Marker> driversMarkerSet = Set<Marker>();
+
+      // for each driver in the active drivers list...
+      for (ActiveNearbyAvailableDrivers eachDriver
+          in GeoFireAssistant.activeNearbyAvailableDriversList) {
+        // get the driver's current position
+        LatLng eachDriverActivePosition =
+            LatLng(eachDriver.locationLatitude!, eachDriver.locationLongitude!);
+
+        // display a marker at the driver's position
+        Marker marker = Marker(
+          markerId: MarkerId(eachDriver.driverId!),
+          position: eachDriverActivePosition,
+          icon: activeNearbyDriverIcon!,
+          rotation: 360,
+        );
+
+        // add this driver's market to the driversMarkerSet
+        driversMarkerSet.add(marker);
+      }
+
+      setState(() {
+        markerSet = driversMarkerSet;
+      });
+    });
+  }
+
+  // custom active nearby driver marker
+  createActiveNearbyDriverIconMarker() {
+    if (activeNearbyDriverIcon == null) {
+      ImageConfiguration imageConfiguration =
+          createLocalImageConfiguration(context, size: const Size(2, 2));
+      BitmapDescriptor.fromAssetImage(
+              imageConfiguration, 'asset/images/car.png')
+          .then((value) {
+        activeNearbyDriverIcon = value;
+      });
+    }
+  }
 }
 
 // ------- v2 of location permission and get userCurrentPosition
-  // void checkLocationPermission() async {
-  //   LocationPermission permission;
+// void checkLocationPermission() async {
+//   LocationPermission permission;
 
-  //   try {
-  //     permission = await Geolocator.checkPermission();
-  //     // print(permission);
+//   try {
+//     permission = await Geolocator.checkPermission();
+//     // print(permission);
 
-  //     if (permission == LocationPermission.denied) {
-  //       permission = await Geolocator.requestPermission();
-  //       if (permission == LocationPermission.denied) {
-  //         permission = await Geolocator.requestPermission();
-  //       }
-  //     }
+//     if (permission == LocationPermission.denied) {
+//       permission = await Geolocator.requestPermission();
+//       if (permission == LocationPermission.denied) {
+//         permission = await Geolocator.requestPermission();
+//       }
+//     }
 
-  //     if (permission == LocationPermission.deniedForever) {
-  //       permission = await Geolocator.requestPermission();
-  //       if (permission == LocationPermission.deniedForever) {
-  //         permission = await Geolocator.requestPermission();
-  //       }
-  //     }
-  //     // print(permission);
-  //   } catch (err) {
-  //     print(err);
-  //   }
-  // }
+//     if (permission == LocationPermission.deniedForever) {
+//       permission = await Geolocator.requestPermission();
+//       if (permission == LocationPermission.deniedForever) {
+//         permission = await Geolocator.requestPermission();
+//       }
+//     }
+//     // print(permission);
+//   } catch (err) {
+//     print(err);
+//   }
+// }
 
-  // void locateUserPosition() async {
-  //   Position cPosition = await Geolocator.getCurrentPosition(
-  //       desiredAccuracy: LocationAccuracy.high);
+// void locateUserPosition() async {
+//   Position cPosition = await Geolocator.getCurrentPosition(
+//       desiredAccuracy: LocationAccuracy.high);
 
-  //   userCurrentPosition = cPosition;
+//   userCurrentPosition = cPosition;
 
-  //   LatLng latLngPosition =
-  //       LatLng(userCurrentPosition!.latitude, userCurrentPosition!.longitude);
+//   LatLng latLngPosition =
+//       LatLng(userCurrentPosition!.latitude, userCurrentPosition!.longitude);
 
-  //   CameraPosition cameraPosition =
-  //       CameraPosition(target: latLngPosition, zoom: 14);
+//   CameraPosition cameraPosition =
+//       CameraPosition(target: latLngPosition, zoom: 14);
 
-  //   newGoogleMapController!
-  //       .animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
-  // }
+//   newGoogleMapController!
+//       .animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
+// }
