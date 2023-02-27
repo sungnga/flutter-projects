@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:flutter/services.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
@@ -17,6 +19,7 @@ import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:users_app/models/user.dart';
 import 'package:users_app/assistants/geofire_assistant.dart';
 import 'package:users_app/models/active_nearby_available_drivers.dart';
+import 'package:users_app/geo_fire/drivers_list.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -70,7 +73,7 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   saveRideRequestInformation() {
-    // get the list of online drivers
+    // create an empty list of online nearby drivers
     onlineNearbyAvailableDriversList =
         GeoFireAssistant.activeNearbyAvailableDriversList;
     searchNearestOnlineDrivers();
@@ -78,7 +81,7 @@ class _MainScreenState extends State<MainScreen> {
 
   // this method is being called when the user clicks on the Request a Ride button
   searchNearestOnlineDrivers() async {
-    // if no drivers in the online drivers list
+    // if no active drivers available
     if (onlineNearbyAvailableDriversList.length == 0) {
       // TODO: cancel/delete the RideRequest Information
 
@@ -97,6 +100,34 @@ class _MainScreenState extends State<MainScreen> {
       Navigator.push(context, MaterialPageRoute(builder: (c) => MainScreen()));
       // return early
       return;
+    }
+
+    // if there are active drivers nearby, call this method
+    // to get active drivers info from db
+    await retrieveOnlineDriversInfo(onlineNearbyAvailableDriversList);
+  }
+
+  // the arg passed to this method is a list of activeDrivers
+  // it contains the driverId used to reference in driver node to retrieve driver info
+  retrieveOnlineDriversInfo(List onlineNearestDriversList) async {
+    // get a reference to the drivers node in fb realtime db
+    DatabaseReference ref = FirebaseDatabase.instance.ref().child("drivers");
+
+    // iterate through the list of activeDrivers and retrieve
+    // driver info in the drivers node in db
+    for (int i = 0; i < onlineNearestDriversList.length; i++) {
+      await ref
+          .child(onlineNearestDriversList[i].driverId.toString())
+          .once()
+          .then((dataSnapshot) {
+        // assign driver data to this variable
+        var driverKeyInfo = dataSnapshot.snapshot.value;
+
+        // dList is a global variable
+        // add each driver info to active drivers info list
+        dList.add(driverKeyInfo);
+        // print("DRIVER KEY INFO: ${dList.toString()}");
+      });
     }
   }
 
@@ -139,7 +170,6 @@ class _MainScreenState extends State<MainScreen> {
     // get current position from device
     Position currentPosition = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high);
-    print(currentPosition);
 
     // set user current position to current position
     userCurrentPosition = currentPosition;
@@ -212,13 +242,13 @@ class _MainScreenState extends State<MainScreen> {
                   scaffoldKey.currentState!.openDrawer();
                 } else {
                   // restart-refresh-minimize app
-                  // SystemNavigator.pop();
+                  SystemNavigator.pop();
 
                   // when the user clicks on the close[X] button
                   // this cancels the destination location set by user
                   // takes user back to MainScreen and direction polyline disappears
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => MainScreen()));
+                  // Navigator.push(context,
+                  //     MaterialPageRoute(builder: (context) => MainScreen()));
                 }
               },
               child: CircleAvatar(
@@ -277,10 +307,10 @@ class _MainScreenState extends State<MainScreen> {
                                 height: 6.0,
                               ),
                               Text(
-                                Provider.of<AppInfo>(context)
+                                Provider.of<AppInfo>(context, listen: false)
                                             .userPickUpLocation !=
                                         null
-                                    ? "${(Provider.of<AppInfo>(context).userPickUpLocation!.locationName!).substring(0, 30)} ..."
+                                    ? "${(Provider.of<AppInfo>(context, listen: false).userPickUpLocation!.locationName!).substring(0, 30)} ..."
                                     : "Not getting address",
                                 style:
                                     TextStyle(color: Colors.grey, fontSize: 14),
@@ -342,10 +372,10 @@ class _MainScreenState extends State<MainScreen> {
                                   height: 6.0,
                                 ),
                                 Text(
-                                  Provider.of<AppInfo>(context)
+                                  Provider.of<AppInfo>(context, listen: false)
                                               .userDropOffLocation !=
                                           null
-                                      ? "${Provider.of<AppInfo>(context).userDropOffLocation!.locationName!.substring(0, 30)} ..."
+                                      ? "${(Provider.of<AppInfo>(context, listen: false).userDropOffLocation!.locationName!).substring(0, 30)} ..."
                                       : 'Where to go?',
                                   style: TextStyle(
                                     color: Colors.grey,
