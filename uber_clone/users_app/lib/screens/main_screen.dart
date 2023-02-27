@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_geofire/flutter_geofire.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -56,6 +57,8 @@ class _MainScreenState extends State<MainScreen> {
   bool activeNearbyDriverKeysLoaded = false;
   BitmapDescriptor? activeNearbyDriverIcon;
 
+  List<ActiveNearbyAvailableDrivers> onlineNearbyAvailableDriversList = [];
+
   @override
   void initState() {
     super.initState();
@@ -64,6 +67,37 @@ class _MainScreenState extends State<MainScreen> {
     // the user data is stored in userModelCurrentInfo object
     AssistantMethods.readCurrentOnlineUserInfo();
     checkLocationPermission();
+  }
+
+  saveRideRequestInformation() {
+    // get the list of online drivers
+    onlineNearbyAvailableDriversList =
+        GeoFireAssistant.activeNearbyAvailableDriversList;
+    searchNearestOnlineDrivers();
+  }
+
+  // this method is being called when the user clicks on the Request a Ride button
+  searchNearestOnlineDrivers() async {
+    // if no drivers in the online drivers list
+    if (onlineNearbyAvailableDriversList.length == 0) {
+      // TODO: cancel/delete the RideRequest Information
+
+      setState(() {
+        polyLineSet.clear();
+        markerSet.clear();
+        circleSet.clear();
+        pLineCoordinatesList.clear();
+      });
+
+      // display a message to user
+      Fluttertoast.showToast(
+          msg: "No drivers are available. Please try again later.");
+
+      // send user to MainScreen
+      Navigator.push(context, MaterialPageRoute(builder: (c) => MainScreen()));
+      // return early
+      return;
+    }
   }
 
   Future<void> checkLocationPermission() async {
@@ -336,11 +370,15 @@ class _MainScreenState extends State<MainScreen> {
                       ),
                       ElevatedButton(
                         onPressed: () {
-                          fAuth.signOut();
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => LoginScreen()));
+                          if (Provider.of<AppInfo>(context, listen: false)
+                                  .userDropOffLocation !=
+                              null) {
+                            saveRideRequestInformation();
+                          } else {
+                            // if drop-off location textfield is empty
+                            Fluttertoast.showToast(
+                                msg: "Please select destination location.");
+                          }
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Color(0xff00aa80),
