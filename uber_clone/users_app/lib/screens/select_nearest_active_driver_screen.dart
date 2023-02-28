@@ -1,12 +1,17 @@
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:smooth_star_rating_nsafe/smooth_star_rating.dart';
 import 'package:users_app/geo_fire/drivers_list.dart';
 import 'package:users_app/assistants/assistant_methods.dart';
 import 'package:users_app/models/direction_details_info.dart';
 
 class SelectNearestActiveDriverScreen extends StatefulWidget {
-  const SelectNearestActiveDriverScreen({super.key});
+  SelectNearestActiveDriverScreen({this.referenceRideRequest});
+
+  // the data is being passed from the searchNearestOnlineDrivers() method in main_screen.dart
+  DatabaseReference? referenceRideRequest;
 
   @override
   State<SelectNearestActiveDriverScreen> createState() =>
@@ -57,8 +62,12 @@ class _SelectNearestActiveDriverScreenState
         ),
         leading: IconButton(
           onPressed: () {
-            // TODO: remove the ride request from db
-
+            // if the user clicks on the close[X] button ->
+            // remove the ride request info from the allRideRequests node in db
+            // display a message to user the ride request has been cancelled
+            // refresh/restart the app
+            widget.referenceRideRequest!.remove();
+            Fluttertoast.showToast(msg: "You cancelled the ride request.");
             SystemNavigator.pop();
           },
           icon: Icon(
@@ -76,7 +85,8 @@ class _SelectNearestActiveDriverScreenState
               shadowColor: Color(0xff00aa80),
               margin: EdgeInsets.all(8.0),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
                 child: ListTile(
                   leading: Padding(
                     padding: const EdgeInsets.only(top: 2.0),

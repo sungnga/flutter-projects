@@ -64,6 +64,8 @@ class _MainScreenState extends State<MainScreen> {
 
   List<ActiveNearbyAvailableDrivers> onlineNearbyAvailableDriversList = [];
 
+  DatabaseReference? referenceRideRequest;
+
   @override
   void initState() {
     super.initState();
@@ -74,7 +76,43 @@ class _MainScreenState extends State<MainScreen> {
     checkLocationPermission();
   }
 
-  saveRideRequestInformation() {
+  saveRideRequestInfo() {
+    // create a new parent node called allRideRequests in fb realtime database
+    // save the reference to this node as referenceRideRequest
+    referenceRideRequest =
+        FirebaseDatabase.instance.ref().child('allRideRequests').push();
+
+    // get user pickup and drop-off locations state from AppInfo provider
+    var originLocation =
+        Provider.of<AppInfo>(context, listen: false).userPickUpLocation;
+    var destinationLocation =
+        Provider.of<AppInfo>(context, listen: false).userDropOffLocation;
+
+    // these maps are key:value pairs of ride request info from a user
+    // and will be used to save to the database under allRideRequests node
+    Map originLocationMap = {
+      "latitude": originLocation!.locationLatitude.toString(),
+      "longitude": originLocation.locationLongitude.toString(),
+    };
+
+    Map destinationLocationMap = {
+      "latitude": destinationLocation!.locationLatitude.toString(),
+      "longitude": destinationLocation.locationLongitude.toString(),
+    };
+
+    Map userInfoMap = {
+      "origin": originLocationMap,
+      "destination": destinationLocationMap,
+      "time": DateTime.now().toString(),
+      "userName": userModelCurrentInfo!.name,
+      "userPhone": userModelCurrentInfo!.phone,
+      "originAddress": originLocation.locationName,
+      "destinationAddress": destinationLocation.locationName,
+      "driverId": "waiting",
+    };
+
+    referenceRideRequest!.set(userInfoMap);
+
     // create an empty list of online nearby drivers
     onlineNearbyAvailableDriversList =
         GeoFireAssistant.activeNearbyAvailableDriversList;
@@ -84,8 +122,9 @@ class _MainScreenState extends State<MainScreen> {
   // this method is being called when the user clicks on the Request a Ride button
   searchNearestOnlineDrivers() async {
     // if no active drivers available
-    if (onlineNearbyAvailableDriversList.length == 0) {
-      // TODO: cancel/delete the RideRequest Information
+    if (onlineNearbyAvailableDriversList.isEmpty) {
+      // cancel/delete the Ride Request Info
+      referenceRideRequest!.remove();
 
       setState(() {
         polyLineSet.clear();
@@ -99,7 +138,8 @@ class _MainScreenState extends State<MainScreen> {
           msg: "No drivers are available. Please try again later.");
 
       Future.delayed(const Duration(milliseconds: 4000), () {
-        MyApp.restartApp(context);
+        // refreshes the app entirely
+        SystemNavigator.pop();
       });
       // send user to MainScreen
       // Navigator.push(context, MaterialPageRoute(builder: (c) => MainScreen()));
@@ -112,8 +152,12 @@ class _MainScreenState extends State<MainScreen> {
     // to get active drivers info from db
     await retrieveOnlineDriversInfo(onlineNearbyAvailableDriversList);
 
-    Navigator.push(context,
-        MaterialPageRoute(builder: (c) => SelectNearestActiveDriverScreen()));
+    // passing the referenceRideRequest ref to the SelectNearestActiveDriverScreen
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (c) => SelectNearestActiveDriverScreen(
+                referenceRideRequest: referenceRideRequest)));
   }
 
   // the arg passed to this method is a list of activeDrivers
@@ -319,7 +363,7 @@ class _MainScreenState extends State<MainScreen> {
                                 Provider.of<AppInfo>(context, listen: false)
                                             .userPickUpLocation !=
                                         null
-                                    ? "${(Provider.of<AppInfo>(context, listen: false).userPickUpLocation!.locationName!).substring(0, 30)} ..."
+                                    ? "${(Provider.of<AppInfo>(context, listen: false).userPickUpLocation!.locationName!).substring(0, 28)} ..."
                                     : "Not getting address",
                                 style:
                                     TextStyle(color: Colors.grey, fontSize: 14),
@@ -384,7 +428,7 @@ class _MainScreenState extends State<MainScreen> {
                                   Provider.of<AppInfo>(context)
                                               .userDropOffLocation !=
                                           null
-                                      ? "${(Provider.of<AppInfo>(context).userDropOffLocation!.humanReadableAddress!).substring(0, 30)} ..."
+                                      ? "${(Provider.of<AppInfo>(context).userDropOffLocation!.humanReadableAddress!).substring(0, 28)} ..."
                                       : "Where to go?",
                                   style: TextStyle(
                                     color: Colors.grey,
@@ -412,7 +456,7 @@ class _MainScreenState extends State<MainScreen> {
                           if (Provider.of<AppInfo>(context, listen: false)
                                   .userDropOffLocation !=
                               null) {
-                            saveRideRequestInformation();
+                            saveRideRequestInfo();
                           } else {
                             // if drop-off location textfield is empty
                             Fluttertoast.showToast(
@@ -444,8 +488,8 @@ class _MainScreenState extends State<MainScreen> {
         Provider.of<AppInfo>(context, listen: false).userPickUpLocation;
     var destinationPosition =
         Provider.of<AppInfo>(context, listen: false).userDropOffLocation;
-    print("PICKUP POSITION: ${originPosition}");
-    print("DROP-OFF POSITION: ${destinationPosition}");
+    print("PICKUP POSITION: ${originPosition!.locationName}");
+    print("DROP-OFF POSITION: ${destinationPosition!.locationName}");
 
     // convert the user's pickup and drop-off locations into LatLng (from google_map_flutter package)
     var originLatLng = LatLng(
