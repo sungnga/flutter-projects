@@ -45,6 +45,7 @@ class PlacePredictionTile extends StatelessWidget {
         directions.locationId = placeId;
         // use google Place Details docs to read json-format data
         directions.locationName = responseApi["result"]["name"];
+        directions.humanReadableAddress = responseApi["result"]["formatted_address"];
         directions.locationLatitude =
             responseApi["result"]["geometry"]["location"]["lat"];
         directions.locationLongitude =

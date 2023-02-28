@@ -1,21 +1,21 @@
 import 'dart:async';
-import 'package:flutter/services.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_geofire/flutter_geofire.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:users_app/assistants/assistant_methods.dart';
-import 'package:users_app/authentication/auth.dart';
 import 'package:users_app/components/progress_dialog.dart';
 import 'package:users_app/components/sidebar.dart';
 import 'package:users_app/constants/map_style.dart';
-import 'package:users_app/screens/login_screen.dart';
+import 'package:users_app/main.dart';
 import 'package:users_app/screens/search_places_screen.dart';
+import 'package:users_app/screens/select_nearest_active_driver_screen.dart';
 import 'package:users_app/utils/app_info_provider.dart';
-import 'package:provider/provider.dart';
-import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:users_app/models/user.dart';
 import 'package:users_app/assistants/geofire_assistant.dart';
 import 'package:users_app/models/active_nearby_available_drivers.dart';
@@ -96,8 +96,12 @@ class _MainScreenState extends State<MainScreen> {
       Fluttertoast.showToast(
           msg: "No drivers are available. Please try again later.");
 
+      Future.delayed(const Duration(milliseconds: 4000), () {
+        MyApp.restartApp(context);
+      });
       // send user to MainScreen
-      Navigator.push(context, MaterialPageRoute(builder: (c) => MainScreen()));
+      // Navigator.push(context, MaterialPageRoute(builder: (c) => MainScreen()));
+
       // return early
       return;
     }
@@ -105,6 +109,9 @@ class _MainScreenState extends State<MainScreen> {
     // if there are active drivers nearby, call this method
     // to get active drivers info from db
     await retrieveOnlineDriversInfo(onlineNearbyAvailableDriversList);
+
+    Navigator.push(context,
+        MaterialPageRoute(builder: (c) => SelectNearestActiveDriverScreen()));
   }
 
   // the arg passed to this method is a list of activeDrivers
@@ -184,10 +191,10 @@ class _MainScreenState extends State<MainScreen> {
     newGoogleMapController!
         .animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
 
-    // String humanReadableAddress =
-    //     await AssistantMethods.searchAddressForGeoCoord(
-    //         userCurrentPosition!, context);
-    // print("Your address is: ${humanReadableAddress}");
+    String humanReadableAddress =
+        await AssistantMethods.searchAddressForGeoCoord(
+            userCurrentPosition!, context);
+    print("Your address is: ${humanReadableAddress}");
 
     userName = userModelCurrentInfo!.name!;
     userEmail = userModelCurrentInfo!.email!;
@@ -372,11 +379,11 @@ class _MainScreenState extends State<MainScreen> {
                                   height: 6.0,
                                 ),
                                 Text(
-                                  Provider.of<AppInfo>(context, listen: false)
+                                  Provider.of<AppInfo>(context)
                                               .userDropOffLocation !=
                                           null
-                                      ? "${(Provider.of<AppInfo>(context, listen: false).userDropOffLocation!.locationName!).substring(0, 30)} ..."
-                                      : 'Where to go?',
+                                      ? "${(Provider.of<AppInfo>(context).userDropOffLocation!.humanReadableAddress!).substring(0, 30)} ..."
+                                      : "Where to go?",
                                   style: TextStyle(
                                     color: Colors.grey,
                                     fontSize: 14.0,
@@ -435,12 +442,16 @@ class _MainScreenState extends State<MainScreen> {
         Provider.of<AppInfo>(context, listen: false).userPickUpLocation;
     var destinationPosition =
         Provider.of<AppInfo>(context, listen: false).userDropOffLocation;
+    print("PICKUP POSITION: ${originPosition}");
+    print("DROP-OFF POSITION: ${destinationPosition}");
 
     // convert the user's pickup and drop-off locations into LatLng (from google_map_flutter package)
     var originLatLng = LatLng(
         originPosition!.locationLatitude!, originPosition.locationLongitude!);
     var destinationLatLng = LatLng(destinationPosition!.locationLatitude!,
         destinationPosition.locationLongitude!);
+    print("ORIGIN: ${originLatLng}");
+    print("DESTINATION: ${destinationLatLng}");
 
     showDialog(
       context: context,
