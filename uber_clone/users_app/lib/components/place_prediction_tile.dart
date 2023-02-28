@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:users_app/models/predicted_places.dart';
+import 'package:users_app/models/predicted_places_model.dart';
 import 'package:users_app/assistants/request_assistant.dart';
 import 'package:users_app/components/progress_dialog.dart';
 import 'package:users_app/google_maps/map_key.dart';
-import 'package:users_app/models/directions.dart';
+import 'package:users_app/models/directions_model.dart';
 import 'package:users_app/utils/app_info_provider.dart';
 import 'package:provider/provider.dart';
 

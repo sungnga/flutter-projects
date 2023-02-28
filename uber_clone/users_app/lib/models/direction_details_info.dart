@@ -1,15 +1,3 @@
-class DirectionDetailsInfo {
-  int? distanceValue;
-  int? durationValue;
-  String? ePoints;
-  String? distanceText;
-  String? durationText;
+import 'package:users_app/models/direction_details_info_model.dart';
 
-  DirectionDetailsInfo({
-    this.distanceValue,
-    this.durationValue,
-    this.ePoints,
-    this.distanceText,
-    this.durationText,
-  });
-}
+DirectionDetailsInfo? tripDirectionDetailsInfo;

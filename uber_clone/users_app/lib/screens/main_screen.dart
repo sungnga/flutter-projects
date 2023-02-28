@@ -13,12 +13,14 @@ import 'package:users_app/components/progress_dialog.dart';
 import 'package:users_app/components/sidebar.dart';
 import 'package:users_app/constants/map_style.dart';
 import 'package:users_app/main.dart';
+import 'package:users_app/models/direction_details_info.dart';
+import 'package:users_app/models/direction_details_info_model.dart';
 import 'package:users_app/screens/search_places_screen.dart';
 import 'package:users_app/screens/select_nearest_active_driver_screen.dart';
 import 'package:users_app/utils/app_info_provider.dart';
 import 'package:users_app/models/user.dart';
 import 'package:users_app/assistants/geofire_assistant.dart';
-import 'package:users_app/models/active_nearby_available_drivers.dart';
+import 'package:users_app/models/active_nearby_available_drivers_model.dart';
 import 'package:users_app/geo_fire/drivers_list.dart';
 
 class MainScreen extends StatefulWidget {
@@ -463,6 +465,10 @@ class _MainScreenState extends State<MainScreen> {
     var directionDetailsInfo =
         await AssistantMethods.obtainOriginToDestinationDirectionDetails(
             originLatLng, destinationLatLng);
+    // tripDirectionDetailsInfo is a global variable
+    setState(() {
+      tripDirectionDetailsInfo = directionDetailsInfo;
+    });
 
     // close the ProgressDialog box after making the request
     Navigator.pop(context);

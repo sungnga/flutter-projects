@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:users_app/models/directions.dart';
+import 'package:users_app/models/directions_model.dart';
 
 class AppInfo extends ChangeNotifier {
   Directions? userPickUpLocation, userDropOffLocation;

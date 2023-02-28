@@ -1,15 +1,15 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:provider/provider.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:users_app/assistants/request_assistant.dart';
 import 'package:users_app/authentication/auth.dart';
 import 'package:users_app/models/user.dart';
 import 'package:users_app/google_maps/map_key.dart';
 import 'package:users_app/models/user_model.dart';
 import 'package:users_app/utils/app_info_provider.dart';
-import 'package:users_app/models/directions.dart';
-import 'package:provider/provider.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:users_app/models/direction_details_info.dart';
+import 'package:users_app/models/directions_model.dart';
+import 'package:users_app/models/direction_details_info_model.dart';
 
 class AssistantMethods {
   // This method does reverse geocoding to human-readable address
@@ -90,5 +90,20 @@ class AssistantMethods {
         responseDirectionApi["routes"][0]["legs"][0]["duration"]["value"];
 
     return directionDetailsInfo;
+  }
+
+  // this method is being called in main_screen.dart
+  calculateFareAmount(DirectionDetailsInfo directionDetailsInfo) {
+    double baseFareAmt = 3.0;
+    double timeTraveledFareAmtPerMinute =
+        (directionDetailsInfo.durationValue! / 60) * 0.1;
+    double distanceTraveledFareAmtPerKilometer =
+        (directionDetailsInfo.durationValue! / 1000) * 0.1;
+
+    // in USD
+    double totalFareAmt =
+        baseFareAmt + timeTraveledFareAmtPerMinute + distanceTraveledFareAmtPerKilometer;
+
+    return double.parse(totalFareAmt.toStringAsFixed(2));
   }
 }

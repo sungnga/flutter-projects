@@ -1,4 +1,4 @@
-import 'package:users_app/models/active_nearby_available_drivers.dart';
+import 'package:users_app/models/active_nearby_available_drivers_model.dart';
 
 class GeoFireAssistant {
   static List<ActiveNearbyAvailableDrivers> activeNearbyAvailableDriversList =
