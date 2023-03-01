@@ -12,7 +12,7 @@ void main() async {
       create: (context) => AppInfo(),
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        title: 'Drivers App',
+        title: 'Users App',
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),

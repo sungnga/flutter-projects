@@ -11,6 +11,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:drivers_app/constants/map_style.dart';
 import 'package:drivers_app/assistants/assistant_methods.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:drivers_app/push_notifications/push_notification_system.dart';
 
 class HomeTabPage extends StatefulWidget {
   const HomeTabPage({super.key});
@@ -44,6 +45,7 @@ class _HomeTabPageState extends State<HomeTabPage> {
     // the user data is stored in userModelCurrentInfo object
     AssistantMethods.readCurrentOnlineUserInfo();
     checkLocationPermission();
+    readCurrentDriverInfo();
   }
 
   Future<void> checkLocationPermission() async {
@@ -100,10 +102,21 @@ class _HomeTabPageState extends State<HomeTabPage> {
     newGoogleMapController!
         .animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
 
-    // String humanReadableAddress =
-    //     await AssistantMethods.searchAddressForGeoCoord(
-    //         driverCurrentPosition!, context);
-    // print("Your address is: ${humanReadableAddress}");
+    String humanReadableAddress =
+        await AssistantMethods.searchAddressForGeoCoord(
+            driverCurrentPosition!, context);
+    print("Your address is: ${humanReadableAddress}");
+  }
+
+  void readCurrentDriverInfo() {
+    // currentFirebaseUser is a global variable
+    currentFirebaseUser = fAuth.currentUser;
+
+    PushNotificationSystem pushNotificationSystem = PushNotificationSystem();
+    // initialize the push notification system
+    pushNotificationSystem.initializeCloudMessaging();
+    // generate and get FCM token for driver, save the token to drivers node in db
+    pushNotificationSystem.generateAndGetToken();
   }
 
   @override
