@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:drivers_app/authentication/auth.dart';
 import 'package:drivers_app/models/user_ride_request_info_model.dart';
+import 'package:drivers_app/push_notifications/notification_dialog_box.dart';
 
 class PushNotificationSystem {
   FirebaseMessaging messaging = FirebaseMessaging.instance;
 
-  Future initializeCloudMessaging() async {
+  Future initializeCloudMessaging(BuildContext context) async {
     // Re-enable FCM auto-init at runtime
     // to enable auto-init for a specific app instance
     messaging.setAutoInitEnabled(true);
@@ -39,38 +39,39 @@ class PushNotificationSystem {
         print("REMOTE MESSAGE: ${remoteMessage.data}");
         print("REMOTE REQUEST ID: ${remoteMessage.data["rideRequestId"]}");
         // display ride request info - user info who requested the ride
-        readUserRideRequestInfo(remoteMessage.data["rideRequestId"]);
+        readUserRideRequestInfo(remoteMessage.data["rideRequestId"], context);
       }
     });
 
     // 2. Foreground state:
     // when the app is open, in view and in use, it receives a push notification
     FirebaseMessaging.onMessage.listen((RemoteMessage? remoteMessage) {
-      print("REMOTE MESSAGE: ${remoteMessage!.data}");
-      print("REMOTE REQUEST ID: ${remoteMessage.data["rideRequestId"]}");
+      print("INCOMING REMOTE MESSAGE: ${remoteMessage!.data}");
+      print(
+          "INCOMING REMOTE REQUEST ID: ${remoteMessage.data["rideRequestId"]}");
+
       // display ride request info - user info who requested the ride
-      readUserRideRequestInfo(remoteMessage.data["rideRequestId"]);
+      readUserRideRequestInfo(remoteMessage.data["rideRequestId"], context);
+      
+      if (remoteMessage.notification != null) {
+        print("NOTIFICATION: ${remoteMessage.notification!.body}");
+        print("NOTIFICATION: ${remoteMessage.notification!.title}");
+      }
     });
 
     // 3. Background state:
     // when the app is minimized
     // the app opens directly from the push notification
-    // FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage? remoteMessage) {
-    //   print("REMOTE MESSAGE: ${remoteMessage!.data}");
-    //   print("REMOTE REQUEST ID: ${remoteMessage.data["rideRequestId"]}");
-    //   // display ride request info - user info who requested the ride
-    //   readUserRideRequestInfo(remoteMessage.data["rideRequestId"]);
-    // });
-    FirebaseMessaging.onBackgroundMessage((RemoteMessage? remoteMessage) {
-      print("REMOTE MESSAGE: ${remoteMessage!.data}");
-      print("REMOTE REQUEST ID: ${remoteMessage.data["rideRequestId"]}");
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage? remoteMessage) {
+      print("ON MESSAGE OPENED REMOTE MESSAGE: ${remoteMessage!.data}");
+      print("ON MESSAGE OPENED REMOTE REQUEST ID: ${remoteMessage.data["rideRequestId"]}");
+
       // display ride request info - user info who requested the ride
-      readUserRideRequestInfo(remoteMessage.data["rideRequestId"]);
-      throw "";
+      readUserRideRequestInfo(remoteMessage.data["rideRequestId"], context);
     });
   }
 
-  readUserRideRequestInfo(String userRideRequestId) {
+  readUserRideRequestInfo(String userRideRequestId, BuildContext context) {
     // get the user ride request info from db
     FirebaseDatabase.instance
         .ref()
@@ -113,6 +114,14 @@ class PushNotificationSystem {
         userRideRequestDetails.userPhone = userPhone;
 
         print("USER RIDE REQUEST DETAILS: ${userRideRequestDetails.userName}");
+
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return NotificationDialogBox(
+                userRideRequestDetails: userRideRequestDetails);
+          },
+        );
       } else {
         Fluttertoast.showToast(msg: "This ride request id doesn't exist.");
       }

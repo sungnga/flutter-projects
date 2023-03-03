@@ -114,7 +114,7 @@ class _HomeTabPageState extends State<HomeTabPage> {
 
     PushNotificationSystem pushNotificationSystem = PushNotificationSystem();
     // initialize the push notification system
-    pushNotificationSystem.initializeCloudMessaging();
+    pushNotificationSystem.initializeCloudMessaging(context);
     // generate and get FCM token for driver, save the token to drivers node in db
     pushNotificationSystem.generateAndGetToken();
   }
