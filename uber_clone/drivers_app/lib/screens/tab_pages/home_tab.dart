@@ -12,6 +12,7 @@ import 'package:drivers_app/constants/map_style.dart';
 import 'package:drivers_app/assistants/assistant_methods.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:drivers_app/push_notifications/push_notification_system.dart';
+import 'package:drivers_app/models/driver_data.dart';
 
 class HomeTabPage extends StatefulWidget {
   const HomeTabPage({super.key});
@@ -111,6 +112,31 @@ class _HomeTabPageState extends State<HomeTabPage> {
   void readCurrentDriverInfo() {
     // currentFirebaseUser is a global variable
     currentFirebaseUser = fAuth.currentUser;
+
+    // save current online driver data from db to global DriverDataModel instance
+    FirebaseDatabase.instance
+        .ref()
+        .child("drivers")
+        .child(currentFirebaseUser!.uid)
+        .once()
+        .then((snap) {
+      if (snap.snapshot.value != null) {
+        // onlineDriverData is a global instance of DriverDataModel
+        onlineDriverData.id = (snap.snapshot.value as Map)["id"];
+        onlineDriverData.name = (snap.snapshot.value as Map)["name"];
+        onlineDriverData.email = (snap.snapshot.value as Map)["email"];
+        onlineDriverData.phone = (snap.snapshot.value as Map)["phone"];
+        onlineDriverData.carColor =
+            (snap.snapshot.value as Map)["car_details"]["car_color"];
+        onlineDriverData.carModel =
+            (snap.snapshot.value as Map)["car_details"]["car_model"];
+        onlineDriverData.carPlate =
+            (snap.snapshot.value as Map)["car_details"]["car_plate"];
+
+        print(
+            "ONLINE DRIVER CAR DETAILS: ${onlineDriverData.name}, ${onlineDriverData.carModel}, ${onlineDriverData.carColor}, ${onlineDriverData.carPlate}");
+      }
+    });
 
     PushNotificationSystem pushNotificationSystem = PushNotificationSystem();
     // initialize the push notification system
