@@ -12,9 +12,7 @@ import 'package:users_app/assistants/assistant_methods.dart';
 import 'package:users_app/components/progress_dialog.dart';
 import 'package:users_app/components/sidebar.dart';
 import 'package:users_app/constants/map_style.dart';
-import 'package:users_app/main.dart';
 import 'package:users_app/models/direction_details_info.dart';
-import 'package:users_app/models/direction_details_info_model.dart';
 import 'package:users_app/screens/search_places_screen.dart';
 import 'package:users_app/screens/select_nearest_active_driver_screen.dart';
 import 'package:users_app/utils/app_info_provider.dart';
@@ -22,6 +20,7 @@ import 'package:users_app/models/user.dart';
 import 'package:users_app/assistants/geofire_assistant.dart';
 import 'package:users_app/models/active_nearby_available_drivers_model.dart';
 import 'package:users_app/geo_fire/drivers_list.dart';
+import 'package:users_app/global/global.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -152,12 +151,42 @@ class _MainScreenState extends State<MainScreen> {
     // to get active drivers info from db
     await retrieveOnlineDriversInfo(onlineNearbyAvailableDriversList);
 
+    // variable response holds the receiving value coming from SelectNearestActiveDriverScreen
     // passing the referenceRideRequest ref to the SelectNearestActiveDriverScreen
-    Navigator.push(
+    var response = await Navigator.push(
         context,
         MaterialPageRoute(
             builder: (c) => SelectNearestActiveDriverScreen(
                 referenceRideRequest: referenceRideRequest)));
+
+    if (response == "chosenDriver") {
+      FirebaseDatabase.instance
+          .ref()
+          .child("drivers")
+          .child(chosenDriverId!)
+          .once()
+          .then((snap) {
+        if (snap.snapshot.value != null) {
+          // send notification to that specific driver
+          sendNotificationToDriver(chosenDriverId!);
+        } else {
+          Fluttertoast.showToast(msg: "This driver is not available.");
+        }
+      });
+    }
+  }
+
+  sendNotificationToDriver(String chosenDriverId) {
+    // assign/set rideRequestId to newRideStatus in Drivers parent node
+    // for that specific chosen driver
+    FirebaseDatabase.instance
+        .ref()
+        .child("drivers")
+        .child(chosenDriverId)
+        .child("newRideStatus")
+        .set(referenceRideRequest!.key);
+
+    // TODO: automate the push notification
   }
 
   // the arg passed to this method is a list of activeDrivers
@@ -488,8 +517,8 @@ class _MainScreenState extends State<MainScreen> {
         Provider.of<AppInfo>(context, listen: false).userPickUpLocation;
     var destinationPosition =
         Provider.of<AppInfo>(context, listen: false).userDropOffLocation;
-    print("PICKUP POSITION: ${originPosition!.locationName}");
-    print("DROP-OFF POSITION: ${destinationPosition!.locationName}");
+    // print("PICKUP POSITION: ${originPosition!.locationName}");
+    // print("DROP-OFF POSITION: ${destinationPosition!.locationName}");
 
     // convert the user's pickup and drop-off locations into LatLng (from google_map_flutter package)
     var originLatLng = LatLng(
