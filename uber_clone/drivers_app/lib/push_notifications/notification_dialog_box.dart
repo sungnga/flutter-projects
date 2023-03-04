@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:drivers_app/models/user_ride_request_info_model.dart';
+import 'package:drivers_app/authentication/auth.dart';
 
 class NotificationDialogBox extends StatefulWidget {
   NotificationDialogBox({required this.userRideRequestDetails});
@@ -144,8 +148,8 @@ class _NotificationDialogBoxState extends State<NotificationDialogBox> {
                   ),
                   ElevatedButton(
                     onPressed: () {
-                      // cancel ride request
-                      Navigator.pop(context);
+                      // accept ride request
+                      acceptRideRequest(context);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
@@ -164,5 +168,43 @@ class _NotificationDialogBoxState extends State<NotificationDialogBox> {
         ),
       ),
     );
+  }
+
+  acceptRideRequest(BuildContext context) {
+    String getRideRequestId = "";
+
+    // the userRideRequestId is assigned to the the driver's newRideStatus attribute
+    // when the user selects this driver for the ride request
+    // assign the userRideRequestId to the variable getRideRequestId
+    FirebaseDatabase.instance
+        .ref()
+        .child("drivers")
+        .child(currentFirebaseUser!.uid)
+        .child("newRideStatus")
+        .once()
+        .then((snap) {
+      if (snap.snapshot.value != null) {
+        getRideRequestId = snap.snapshot.value.toString();
+      } else {
+        Fluttertoast.showToast(msg: "This ride request is not available.");
+      }
+
+      // if the rideRequestId in the userRideRequestDetails matches
+      // with the rideRequestId in the driver info
+      if (getRideRequestId == widget.userRideRequestDetails!.rideRequestId) {
+        // update newRideStatus attribute in db
+        FirebaseDatabase.instance
+            .ref()
+            .child("drivers")
+            .child(currentFirebaseUser!.uid)
+            .child("newRideStatus")
+            .set("accepted");
+
+        // start trip - send driver to TripScreen
+
+      } else {
+        Fluttertoast.showToast(msg: "This ride request does not exist.");
+      }
+    });
   }
 }
